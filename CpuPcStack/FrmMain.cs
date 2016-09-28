@@ -16,6 +16,7 @@ namespace CpuPcStack
         
         public FrmMain()
         {
+            
             cpsLIB.log.clear();
             net_udp = new cpsLIB.net_udp(this);
             InitializeComponent();

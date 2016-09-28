@@ -19,6 +19,7 @@ namespace cpsLIB
         System.Collections.Concurrent.ConcurrentQueue<Frame> _fstack = null;
         private const Int16 MAXCheckTrys = 5; //Anzahl der erlaubten Wiederholungen bei SYNC Telegram
         private const Int16 MAXSendTrys = 1; //Anzahl der erlaubten Wiederholungen bei Telegram die versendet werden
+        private const int WatchdogJobDoneTime_ms = 1000;
         System.Collections.Concurrent.ConcurrentQueue<Frame> _fstackLog = null;
 
         /// <summary>
@@ -107,6 +108,9 @@ namespace cpsLIB
             TotalFramesReceive = 0;
             TotalFramesFinished = 0;
             check_trys = 0;
+        }
+        private void changeFrameState(FrameWorkingState WS, String msg) { 
+        
         }
 
         #region check connection
@@ -205,29 +209,42 @@ namespace cpsLIB
             {
                 if (!_fstack.IsEmpty)
                 {
-                    DateTime range_time = DateTime.Now;
-                    range_time.AddSeconds(5);
+                    //DateTime range_time = DateTime.Now;
+                    //range_time.AddSeconds(5);
 
                     foreach (Frame f in _fstack)
                     {
-                        if (range_time > f.LastSendDateTime)
-                            if (f.SendTrys <= MAXSendTrys)
-                            {
-                                
-                                f.SendTrys++;
-                                f.ChangeState(FrameWorkingState.warning_resend, "repeat send: (" + f.SendTrys.ToString() + ")");
-                                f.LastSendDateTime = DateTime.Now;
-                                _FrmMain.logSendRcv(f);
-                                
-                                _udp_client.send(f);
-                            }
-                            else
-                            {
-                                f.ChangeState(FrameWorkingState.error_sendTrysLimit, "stop sending at try: (" + f.SendTrys.ToString() + ")");                               
-                                _fstackLog.Enqueue(f);
+                        //DateTime tmp = new DateTime();
+                        //tmp = f.TimeCreated;
+                        //tmp.AddSeconds(5);
+
+                        if (f.TimeCreated.AddMilliseconds(WatchdogJobDoneTime_ms) < DateTime.Now)
+                        {
+                            if(!f.IsWorkingState(FrameWorkingState.error)){
+                                f.ChangeState(FrameWorkingState.error, "no answer received");
                                 takeFrameFromStack(f);
                                 _FrmMain.logSendRcv(f);
+                                _fstackLog.Enqueue(f);
                             }
+                        }
+
+                            //if (f.SendTrys <= MAXSendTrys)
+                            //{
+                                
+                            //    f.SendTrys++;
+                            //    f.ChangeState(FrameWorkingState.warning_resend, "repeat send: (" + f.SendTrys.ToString() + ")");
+                            //    f.LastSendDateTime = DateTime.Now;
+                            //    _FrmMain.logSendRcv(f);
+                                
+                            //    _udp_client.send(f);
+                            //}
+                            //else
+                            //{
+                            //    f.ChangeState(FrameWorkingState.error_sendTrysLimit, "stop sending at try: (" + f.SendTrys.ToString() + ")");                               
+                            //    _fstackLog.Enqueue(f);
+                            //    takeFrameFromStack(f);
+                            //    _FrmMain.logSendRcv(f);
+                            //}
                     }
                     
                 }

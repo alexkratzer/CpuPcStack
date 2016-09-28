@@ -50,11 +50,12 @@ namespace cpsLIB
         public string RemoteIp = null;
         public int RemotePort;
         public DateTime TimeCreated; //Zeitstempel an dem das Frame erzeugt wurde
+        
         private FrameWorkingState WorkingState;
         private string WorkingStateMessage; //Log Messages zu dem Frame
-        public DateTime LastSendDateTime; //Zeitstempel an dem das Frame zuletzt versendet wurde
+        
         public int SendTrys = 0;
-        public int index_send;
+        public int IDFrameSend;
 
         /// <summary>
         /// static meta data
@@ -119,7 +120,7 @@ namespace cpsLIB
         public FrameRawData(string type, Int16 index, byte[] bdata, string ip, string port)
         {
             CountSendFrames++;
-            index_send = CountSendFrames;
+            IDFrameSend = CountSendFrames;
             TimeCreated = DateTime.Now;
             WorkingState = FrameWorkingState.created;
             RemoteIp = ip;
@@ -207,7 +208,8 @@ namespace cpsLIB
         }
 
         public string GetDetailedString() {
-            return "[" + RemoteIp + ":" + RemotePort + " " + TimeCreated.ToString("HH:mm:ss:ffffff") + " " + _type + " " + _index + "] " +
+            return IDFrameSend.ToString() + "[" + RemoteIp + ":" + RemotePort + " " + TimeCreated.ToString("HH:mm:ss:ffffff") + 
+                " " + _type + " " + _index + "] " +
                 " (" + WorkingState.ToString() + ") " + WorkingStateMessage + " {" + this.ToString() + "}";
         }
 
@@ -284,6 +286,13 @@ namespace cpsLIB
             //TODO: schreibe in GUI
             //oder besser in eine liste des frames mit - id, timestamp, WorkingState, WorkingStateMessage 
             return this;
+        }
+
+        public bool IsWorkingState(FrameWorkingState ws) {
+            if (WorkingState.Equals(ws))
+                return true;
+            else
+                return false;
         }
         #endregion
 

@@ -45,6 +45,7 @@ BEGIN
 	
 	
 	
+	
 END_FUNCTION
 
 FUNCTION_BLOCK "iCPS"
@@ -85,6 +86,8 @@ VERSION : 0.1
       INIT : Int := 0;
       WORKING : Int := 1;
       LOCALport : UInt := 2204;
+      CONNSEND_ID : CONN_OUC := 1;
+      CONNRCV_ID : CONN_OUC := 2;
    END_VAR
 
 
@@ -92,120 +95,141 @@ BEGIN
 	
 	//+++++++++++++++++++++++++++++++++++++++ SEND +++++++++++++++++++++++++++++++++++++
 	CASE #SENDstate OF
-	    #INIT:
-	        #SENDTCON.REQ := TRUE;
-	        
-	        #SENDconn.LOCAL_TSAP_ID[1] := UINT_TO_BYTE(#LOCALport / 256);
-	        #SENDconn.LOCAL_TSAP_ID[2] := UINT_TO_BYTE(#LOCALport MOD 256);
-	        
-	        IF #SENDTCON.DONE THEN
-	            #SENDTCON.REQ := FALSE;
-	            #SENDstate := #WORKING;
-	        END_IF;
-	        IF #SENDTCON.ERROR THEN
-	            #SENDTCON.REQ := FALSE;
-	        END_IF;
-	        
-	    #WORKING:
-	        IF NOT #SENDTUSEND.BUSY AND ("CPS_send".index_msg > 0) THEN
-	            #SENDTUSEND.REQ := TRUE;
-	            "CPS_send".index_msg := "CPS_send".index_msg - 1;
-	            
-	            #SENDremote_addr.REM_IP_ADDR := "CPS_send".msg["CPS_send".index_msg].remote_ip;
-	            #SENDremote_addr.REM_PORT_NR := #port_remote;
-	            
-	            #SENDdata := "CPS_send".msg["CPS_send".index_msg];
-	            #send_data_byte := #send_data_AT;
-	            
-	            (*
-	            Strg_TO_Chars(Strg:= #data.type,
-	                          pChars:=0,
-	                          Cnt=>#IBS_string_to_char_length,
-	                          Chars:=#send_data_byte);
-	            #IBS_data_convert := #data;
-	            *)
-	
-	        END_IF;
+	  #INIT:
+	      #SENDconn.ID := #CONNSEND_ID;
+	      #SENDconn.CONNECTION_TYPE := 19;
+	      #SENDconn.ACTIVE_EST := FALSE;
+	      #SENDconn.LOCAL_TSAP_ID_LEN := 2;
+	      #SENDconn.REM_STADDR_LEN := 0;
+	      #SENDconn.REM_TSAP_ID_LEN := 0;
+	      
+	    #SENDconn.LOCAL_TSAP_ID[1] := UINT_TO_BYTE(#LOCALport / 256);
+	    #SENDconn.LOCAL_TSAP_ID[2] := UINT_TO_BYTE(#LOCALport MOD 256);
+	    #SENDTCON.REQ := TRUE;
+	    
+	    IF #SENDTCON.DONE THEN
+	      #SENDTCON.REQ := FALSE;
+	      #SENDstate := #WORKING;
+	    END_IF;
+	    IF #SENDTCON.ERROR THEN
+	      #SENDTCON.REQ := FALSE;
+	    END_IF;
+	    
+	  #WORKING:
+	    IF NOT #SENDTUSEND.BUSY AND ("CPS_send".index_msg > 0) THEN
+	      #SENDTUSEND.REQ := TRUE;
+	      "CPS_send".index_msg := "CPS_send".index_msg - 1;
+	      
+	      #SENDremote_addr.REM_IP_ADDR := "CPS_send".msg["CPS_send".index_msg].remote_ip;
+	      #SENDremote_addr.REM_PORT_NR := #port_remote;
+	      
+	      #SENDdata := "CPS_send".msg["CPS_send".index_msg];
+	      #send_data_byte := #send_data_AT;
+	      
+	      (*
+	      Strg_TO_Chars(Strg:= #data.type,
+	                    pChars:=0,
+	                    Cnt=>#IBS_string_to_char_length,
+	                    Chars:=#send_data_byte);
+	      #IBS_data_convert := #data;
+	      *)
+	      
+	    END_IF;
 	END_CASE;
 	
 	IF #SENDTUSEND.DONE THEN
-	    #SENDTUSEND.REQ := FALSE;
+	  #SENDTUSEND.REQ := FALSE;
 	END_IF;
 	IF #SENDTUSEND.ERROR THEN
-	    #SENDTUSEND.REQ := FALSE;
+	  #SENDTUSEND.REQ := FALSE;
 	END_IF;
 	
 	
 	//+++++++++++++++++++++++++++++++++++++++ RCV +++++++++++++++++++++++++++++++++++++
 	CASE #RCVstate OF
 	    #INIT:
-	        #RCVTCON.REQ := TRUE;
-	        
-	        #RCVconn.ID := 3;
-	        #RCVconn.LOCAL_TSAP_ID[1] := UINT_TO_BYTE(#port_listen / 256);
-	        #RCVconn.LOCAL_TSAP_ID[2] := UINT_TO_BYTE(#port_listen MOD 256);
-	        #RCVconn.ACTIVE_EST := FALSE;
-	        
-	        IF #RCVTCON.DONE THEN
-	            #RCVTCON.REQ := FALSE;
-	            #RCVstate := #WORKING;
-	        END_IF;
-	        IF #RCVTCON.ERROR THEN
-	            #RCVTCON.REQ := FALSE;
-	        END_IF;
-	        
-	    #WORKING:
-	        IF #RCVTURCV.NDR THEN
-	            
-	            //empfangene daten in DB udp_msg_rcv einreihen
-	            "CPS_rcv".msg["CPS_rcv".index_msg] := #RCVdata;
-	            "CPS_rcv".msg["CPS_rcv".index_msg].remote_ip := #RCVremote_addr.REM_IP_ADDR;
-	            "CPS_rcv".msg["CPS_rcv".index_msg].frame_length := #RCVrcv_len;
-	            (*
-	            FOR #tmp_count := 0 TO 3 DO
-	                "udp_msg_rcv".msg["udp_msg_rcv".index_msg].type[#tmp_count] := #data_rcv_byte[#tmp_count];
-	            END_FOR;
-	            
-	            "udp_msg_rcv".msg["udp_msg_rcv".index_msg].index := #data_rcv.index;
-	                
-	            MOVE_BLK(IN:=#data_rcv_byte[6],
-	                     COUNT:=20,
-	                     OUT=>"udp_msg_rcv".msg["udp_msg_rcv".index_msg].data[0]);
-	            *)
-	            
-	            //### IBS #### -> Empfangenes packet spiegeln und wieder zurück senden
-	            #RCVdata.remote_ip := #RCVremote_addr.REM_IP_ADDR;
-	            #RCVdata.frame_length := #RCVrcv_len;
-	            "sendCPS"(#RCVdata);
-	            //### IBS #### 
-	            
-	            //index in DB erhöhen
-	            "CPS_rcv".index_msg := "CPS_rcv".index_msg + 1;
-	        END_IF;
-	        
-	        
+	    #RCVTCON.REQ := TRUE;
+	    
+	    #RCVconn.ID := #CONNRCV_ID;
+	    #RCVconn.CONNECTION_TYPE := 19;
+	    #RCVconn.ACTIVE_EST := FALSE;
+	    #RCVconn.LOCAL_TSAP_ID_LEN := 2;
+	    #RCVconn.REM_STADDR_LEN := 0;
+	    #RCVconn.REM_TSAP_ID_LEN := 0;
+	    #RCVconn.LOCAL_TSAP_ID[1] := UINT_TO_BYTE(#port_listen / 256);
+	    #RCVconn.LOCAL_TSAP_ID[2] := UINT_TO_BYTE(#port_listen MOD 256);
+	    #RCVconn.ACTIVE_EST := FALSE;
+	    
+	    IF #RCVTCON.DONE THEN
+	      #RCVTCON.REQ := FALSE;
+	      #RCVstate := #WORKING;
+	    END_IF;
+	    IF #RCVTCON.ERROR THEN
+	      #RCVTCON.REQ := FALSE;
+	    END_IF;
+	    
+	  #WORKING:
+	    IF #RCVTURCV.NDR THEN
+	      
+	      //empfangene daten in interface DB einreihen
+	      "CPS_rcv".msg["CPS_rcv".index_msg] := #RCVdata;
+	      "CPS_rcv".msg["CPS_rcv".index_msg].remote_ip := #RCVremote_addr.REM_IP_ADDR;
+	      "CPS_rcv".msg["CPS_rcv".index_msg].frame_length := #RCVrcv_len;
+	      
+	      //index in DB erhöhen
+	      "CPS_rcv".index_msg := "CPS_rcv".index_msg + 1;
+	      //Ringpuffer realisieren
+	      IF "CPS_rcv".index_msg >= 20 THEN
+	          "CPS_rcv".index_msg := 0;
+	      END_IF;
+	      
+	      (*
+	      FOR #tmp_count := 0 TO 3 DO
+	          "udp_msg_rcv".msg["udp_msg_rcv".index_msg].type[#tmp_count] := #data_rcv_byte[#tmp_count];
+	      END_FOR;
+	      
+	      "udp_msg_rcv".msg["udp_msg_rcv".index_msg].index := #data_rcv.index;
+	          
+	      MOVE_BLK(IN:=#data_rcv_byte[6],
+	               COUNT:=20,
+	               OUT=>"udp_msg_rcv".msg["udp_msg_rcv".index_msg].data[0]);
+	      *)
+	      
+	      //### IBS #### -> Empfangenes packet spiegeln und wieder zurück senden
+	      #RCVdata.remote_ip := #RCVremote_addr.REM_IP_ADDR;
+	      #RCVdata.frame_length := #RCVrcv_len;
+	      "sendCPS"(#RCVdata);
+	      //### IBS #### 
+	      
+	
+	    END_IF;
+	    
+	    
 	END_CASE;
 	
 	
 	//+++++++++++++++++++++++++++++++++++++++ SEND +++++++++++++++++++++++++++++++++++++
-	#SENDTCON(ID := 1, CONNECT := #SENDconn);
+	#SENDTCON(ID := #CONNSEND_ID,
+	          CONNECT := #SENDconn);
 	
-	#SENDTUSEND(ID := 1,
-	            LEN :=  #SENDdata.frame_length,
+	#SENDTUSEND(ID := #CONNSEND_ID,
+	            LEN := #SENDdata.frame_length,
 	            DATA := #send_data_byte,
 	            ADDR := #SENDremote_addr);
 	
-	         
-	         
-	//+++++++++++++++++++++++++++++++++++++++ RCV +++++++++++++++++++++++++++++++++++++
-	#RCVTCON(ID:=3, CONNECT:=#RCVconn);
 	
-	#RCVTURCV(EN_R:=true,
-	            ID:=3,
-	            LEN:=0,
-	            RCVD_LEN=>#RCVrcv_len,
-	            DATA:=#RCVdata,
-	            ADDR:=#RCVremote_addr);
+	
+	//+++++++++++++++++++++++++++++++++++++++ RCV +++++++++++++++++++++++++++++++++++++
+	#RCVTCON(ID := #CONNRCV_ID,
+	         CONNECT := #RCVconn);
+	
+	#RCVTURCV(EN_R := true,
+	          ID := #CONNRCV_ID,
+	          LEN := 0,
+	          RCVD_LEN => #RCVrcv_len,
+	          DATA := #RCVdata,
+	          ADDR := #RCVremote_addr);
+	
 	
 	
 END_FUNCTION_BLOCK

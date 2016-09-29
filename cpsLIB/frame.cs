@@ -7,7 +7,8 @@ using System.Net;
 namespace cpsLIB
 {
     public enum FrameType { DEMO, SYNC}
-    public enum FrameWorkingState { created, inWork, done, error, error_double, error_sendTrysLimit, error_send, warning_resend, received, send}
+    public enum FrameSender { client, server, unknown }
+    public enum FrameWorkingState { created, inWork, finish, error, warning, received, send}
     /// <summary>
     /// Telegram;
     /// 4*Char [type]; 1*Int16 [index]; x*byte [payload]
@@ -21,6 +22,10 @@ namespace cpsLIB
         /// </summary>
         public string _type;
         public Int16 _index;
+        private Int16[] _FramePayload; //frame data as INT without type/index
+        private byte[] _FramePayloadByte;
+        private int _FrameLength;
+
         private byte[] FrameData; //the total frame data (including type and index)
         private byte[] _FrameData {
             get { return FrameData; }
@@ -32,17 +37,12 @@ namespace cpsLIB
                 _FrameLength = FrameData.Length;
             }
         }
-        private Int16[] _FramePayload; //frame data as INT without type/index
-        private byte[] _FramePayloadByte;
-        private int _FrameLength;
 
         /// <summary>
         /// frame content description
         /// </summary>
         private const int TYPE_LENGTH = 4; //Bytes used for ascii _type
         private const int INDEX_LENGTH = 2; //Bytes used for index (int)
-        public static bool SendBigEndian = false; //PC = Little-Endian, CPU = Big-Endian
-        public static bool ReceiveBigEndian = false;
 
         /// <summary>
         /// frame meta data
@@ -54,7 +54,11 @@ namespace cpsLIB
         private string WorkingStateMessage; //Log Messages zu dem Frame
         public DateTime LastSendDateTime; //Zeitstempel an dem das Frame zuletzt versendet wurde
         public int SendTrys = 0;
-        public int index_send;
+        public int index_send = 0;
+        public FrameSender frameSender = FrameSender.unknown;
+
+        public static bool SendBigEndian = false; //PC = Little-Endian, CPU = Big-Endian
+        public static bool ReceiveBigEndian = false;
 
         /// <summary>
         /// static meta data
@@ -86,7 +90,10 @@ namespace cpsLIB
         {
             CountRcvFrames++;
             TimeCreated = DateTime.Now;
-            WorkingState = FrameWorkingState.created;
+            frameSender = FrameSender.server;
+
+            ChangeState(FrameWorkingState.created, "make new frame object from rcv UDP Frame");
+            
             RemoteIp = ip;
             if(int.TryParse(port, out RemotePort))
             {
@@ -98,15 +105,15 @@ namespace cpsLIB
                 if (_FrameData.Length >= TYPE_LENGTH)
                     _type = Encoding.ASCII.GetString(_FrameData.Take<byte>(TYPE_LENGTH).ToArray());
                 else
-                    WorkingState = FrameWorkingState.error;
+                    ChangeState(FrameWorkingState.error, "structural defect @rcv Frame -> _FrameData.Length >= TYPE_LENGTH");
 
                 if (_FrameData.Length >= TYPE_LENGTH + INDEX_LENGTH)
                     _index = BitConverter.ToInt16(_FrameData.Skip<byte>(TYPE_LENGTH).Take<byte>(INDEX_LENGTH).ToArray(), 0);
                 else
-                    WorkingState = FrameWorkingState.error;
+                    ChangeState(FrameWorkingState.error, "structural defect @rcv Frame -> _FrameData.Length >= TYPE_LENGTH + INDEX_LENGTH");
             }
             else
-                WorkingState = FrameWorkingState.error;
+                ChangeState(FrameWorkingState.error, "structural defect @rcv Frame -> port not valid: " + port);
         }
 
 
@@ -121,10 +128,12 @@ namespace cpsLIB
             CountSendFrames++;
             index_send = CountSendFrames;
             TimeCreated = DateTime.Now;
-            WorkingState = FrameWorkingState.created;
+            frameSender = FrameSender.client;
+            
             RemoteIp = ip;
             _type = type; //zwischenspeichern bisher nicht notwendig
             _index = index; //zwischenspeichern bisher nicht notwendig        
+            
 
             if (int.TryParse(port, out RemotePort))
             {
@@ -140,9 +149,10 @@ namespace cpsLIB
                     _FrameData = changeEndian(rv);
                 else
                     _FrameData = rv;
+                ChangeState(FrameWorkingState.created, "make new frame object to send it later on");
             }
             else
-                WorkingState = FrameWorkingState.error;
+                ChangeState(FrameWorkingState.error, "structural defect @send Frame -> port not valid: " + port);
         }
         #endregion
 
@@ -184,9 +194,18 @@ namespace cpsLIB
             return _FrameData.Length;
         }
 
-        public string getPayload() {
+        public string getPayloadByte() {
             string s = string.Empty;
-            
+
+            for (int i = 0; i < _FramePayloadByte.Length; i++)
+                s += _FramePayloadByte[i].ToString() + ", ";
+            return s;
+        }
+
+        public string getPayloadInt()
+        {
+            string s = string.Empty;
+
             for (int i = 0; i < _FramePayload.Length; i++)
                 s += _FramePayload[i].ToString() + ", ";
             return s;
@@ -199,15 +218,25 @@ namespace cpsLIB
 
         public override string ToString()
         {
-            string s = string.Empty;
-            Int16[] data = GetIntArr(_FrameData);
-            for (int i = 0; i < data.Length; i++)
-                s += data[i].ToString() + ", ";
-            return s;
+            if (_FrameData != null)
+            {
+                string s = string.Empty;
+                Int16[] data = GetIntArr(_FrameData);
+                for (int i = 0; i < data.Length; i++)
+                    s += data[i].ToString() + ", ";
+
+                s += " byte: ";
+                for (int i = 0; i < _FrameData.Length; i++)
+                    s += _FrameData[i].ToString() + ", ";
+
+                return s;
+            }
+            else
+                return "_FrameData==NULL";
         }
 
         public string GetDetailedString() {
-            return "[" + RemoteIp + ":" + RemotePort + " " + TimeCreated.ToString("HH:mm:ss:ffffff") + " " + _type + " " + _index + "] " +
+            return DateTime.Now.ToString("HH:mm:ss:fff") + " (" + index_send.ToString() + ") [" + RemoteIp + ":" + RemotePort + " " + /*TimeCreated.ToString("HH:mm:ss:fff") +*/ " " + _type + " (" + _index + ")] " +
                 " (" + WorkingState.ToString() + ") " + WorkingStateMessage + " {" + this.ToString() + "}";
         }
 
@@ -274,13 +303,15 @@ namespace cpsLIB
         /// <param name="ws"></param>
         /// <param name="msg"></param>
         /// <returns></returns>
-        public FrameRawData ChangeState(FrameWorkingState ws, string msg) {
+        public FrameRawData ChangeState(FrameWorkingState ws, string msg)
+        {
             WorkingState = ws;
             WorkingStateMessage = msg;
-            
-            //schreibe in log datei
-            log.msg(this, GetDetailedString());
 
+            //schreibe in log datei
+            //log.msg(this, GetDetailedString());
+
+            net_udp.err_notify(this);
             //TODO: schreibe in GUI
             //oder besser in eine liste des frames mit - id, timestamp, WorkingState, WorkingStateMessage 
             return this;
@@ -355,9 +386,9 @@ namespace cpsLIB
         #endregion
     }
 
-    public enum FrameSender { client, server , unknown}
+   
     public class  Frame : FrameRawData{
-        public FrameSender sender = FrameSender.unknown;
+     
         /// <summary>
         /// sync frame ohne content
         /// </summary>

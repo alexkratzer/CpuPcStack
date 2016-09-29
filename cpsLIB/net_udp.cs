@@ -9,17 +9,18 @@ namespace cpsLIB
 {
     public enum udp_state { unknown, connected, disconnected, error }
     public enum msg_type { undef, info, warning, error }
-    public class net_udp /*: projectIUdpPlcLib.IUdpPlcLib*/
+    public class net_udp
     {
        
         // intern
-        private IcpsLIB _FrmMain;
+        public static IcpsLIB _FrmMain;
         private udp_server _udp_server;
         private udp_client _udp_client;
         System.Collections.Concurrent.ConcurrentQueue<Frame> _fstack = null;
         private const Int16 MAXCheckTrys = 5; //Anzahl der erlaubten Wiederholungen bei SYNC Telegram
         private const Int16 MAXSendTrys = 1; //Anzahl der erlaubten Wiederholungen bei Telegram die versendet werden
-        System.Collections.Concurrent.ConcurrentQueue<Frame> _fstackLog = null;
+        //System.Collections.Concurrent.ConcurrentQueue<Frame> _fstackLog = null;
+        private const Int16 WATCHDOG_WORK = 5000; //Erlaubte Zeitdauer in ms bis PLC geantwortet haben muss
 
         /// <summary>
         /// status schnittstelle
@@ -32,11 +33,11 @@ namespace cpsLIB
        
         //Constructor
         public net_udp(IcpsLIB FrmMain) {
-            this._FrmMain = FrmMain;
+            _FrmMain = FrmMain;
             state = udp_state.unknown;
-            _udp_client = new udp_client(this);
+            _udp_client = new udp_client();
             _fstack = new System.Collections.Concurrent.ConcurrentQueue<Frame>();
-            _fstackLog = new System.Collections.Concurrent.ConcurrentQueue<Frame>();
+            //_fstackLog = new System.Collections.Concurrent.ConcurrentQueue<Frame>();
             StackWorker();
         }
 
@@ -48,8 +49,7 @@ namespace cpsLIB
         }
         public void client_message(Frame f)
         {
-            f.sender = FrameSender.client;
-            _FrmMain.logSendRcv(f);
+            f.ChangeState(FrameWorkingState.send, "msg from client to app");
             TotalFramesSend++;
         }
         #endregion
@@ -81,27 +81,28 @@ namespace cpsLIB
                         if (takeFrameFromStack(frame))
                         {
                             TotalFramesFinished++;
-                            frame.ChangeState(FrameWorkingState.done, "takeFrameFromStack");
-                            _fstackLog.Enqueue(frame);
-                            _FrmMain.logSendRcv(frame);
-                            _FrmMain.logSendRcv(f);
+                            
+                            f.ChangeState(FrameWorkingState.finish, "takeFrameFromStack - drop this one");
+                            //_fstackLog.Enqueue(frame);
                         }
                         else
                         {
-                            _FrmMain.logSendRcv(f.ChangeState(FrameWorkingState.error, "ERROR dequeue Frame from stack... "));
-                            _FrmMain.logSendRcv(frame);   
+                            f.ChangeState(FrameWorkingState.error, "ERROR dequeue Frame from stack... ");
+                            frame.ChangeState(FrameWorkingState.error, "ERROR dequeue Frame from stack... ");
                         }
                         return;
                     }
                 }
             f.ChangeState(FrameWorkingState.error, "received udp frame without request...");
-            _FrmMain.logSendRcv(f); 
         }
         #endregion
 
+        public static void err_notify(FrameRawData f) {
+            _FrmMain.logSendRcv(f); 
+        }
+
         public void reset()
         {
-
             state = udp_state.unknown;
             TotalFramesSend = 0;
             TotalFramesReceive = 0;
@@ -130,7 +131,8 @@ namespace cpsLIB
             else
                 if (_fstack.TryDequeue(out f))
                 {
-                    _fstackLog.Enqueue(f);
+                    //_fstackLog.Enqueue(f);
+                    f.ChangeState(FrameWorkingState.finish, "Dequeue frame from stack");
                     return true;
                 }
                 else
@@ -150,9 +152,9 @@ namespace cpsLIB
                 foreach (Frame frame in _fstack)
                     if (frame.isEqualExeptIndex(f))
                     {
-                        f.ChangeState(FrameWorkingState.error_double, "Frame already in send buffer");
-                        _fstackLog.Enqueue(f);
-                        _FrmMain.logSendRcv(f);
+                        f.ChangeState(FrameWorkingState.error, "Frame already in send buffer");
+                        //_fstackLog.Enqueue(f);
+                        Thread.Sleep(100);
                         return false;
                     }
             f.ChangeState(FrameWorkingState.inWork, "Frame put to Stack");
@@ -164,14 +166,6 @@ namespace cpsLIB
         {
             if (_fstack != null)
                 return _fstack.Count;
-            else
-                return 0;
-        }
-
-        public int fstackLogCount()
-        {
-            if (_fstackLog != null)
-                return _fstackLog.Count;
             else
                 return 0;
         }
@@ -205,29 +199,34 @@ namespace cpsLIB
             {
                 if (!_fstack.IsEmpty)
                 {
-                    DateTime range_time = DateTime.Now;
-                    range_time.AddSeconds(5);
-
                     foreach (Frame f in _fstack)
                     {
+                        /*
+                         //TODO funktionalität "resend" evtl rückbauen oder nur in Telegram SYNC verwenden
                         if (range_time > f.LastSendDateTime)
                             if (f.SendTrys <= MAXSendTrys)
                             {
                                 
                                 f.SendTrys++;
-                                f.ChangeState(FrameWorkingState.warning_resend, "repeat send: (" + f.SendTrys.ToString() + ")");
                                 f.LastSendDateTime = DateTime.Now;
-                                _FrmMain.logSendRcv(f);
-                                
+                                f.ChangeState(FrameWorkingState.warning, "repeat send: (" + f.SendTrys.ToString() + ")");
                                 _udp_client.send(f);
                             }
                             else
                             {
-                                f.ChangeState(FrameWorkingState.error_sendTrysLimit, "stop sending at try: (" + f.SendTrys.ToString() + ")");                               
-                                _fstackLog.Enqueue(f);
+                                f.ChangeState(FrameWorkingState.error, "stop sending at try: (" + f.SendTrys.ToString() + ")");                               
+                                //_fstackLog.Enqueue(f);
                                 takeFrameFromStack(f);
-                                _FrmMain.logSendRcv(f);
                             }
+                         */
+                        DateTime tmp = f.TimeCreated;
+                        tmp = tmp.AddMilliseconds(WATCHDOG_WORK);
+                        if (tmp < DateTime.Now) {
+                            f.ChangeState(FrameWorkingState.error, "no answer to sendrequest");
+                            //_fstackLog.Enqueue(f);
+                            takeFrameFromStack(f);
+                        }
+
                     }
                     
                 }

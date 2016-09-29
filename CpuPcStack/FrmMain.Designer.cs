@@ -44,7 +44,7 @@
             this.label_payload_ascii = new System.Windows.Forms.Label();
             this.label_payload_byte = new System.Windows.Forms.Label();
             this.textBox_msg_payload_ASCII = new System.Windows.Forms.TextBox();
-            this.textBox_msg_payload = new System.Windows.Forms.TextBox();
+            this.textBox_msg_payload_byte = new System.Windows.Forms.TextBox();
             this.checkBox_receive_big_endian = new System.Windows.Forms.CheckBox();
             this.checkBox_send_big_endian = new System.Windows.Forms.CheckBox();
             this.comboBox_frame_type = new System.Windows.Forms.ComboBox();
@@ -71,6 +71,8 @@
             this.menuStrip_main = new System.Windows.Forms.MenuStrip();
             this.resetToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.logFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.label2 = new System.Windows.Forms.Label();
+            this.textBox_msg_payload_int = new System.Windows.Forms.TextBox();
             this.groupBox_client.SuspendLayout();
             this.groupBox_listener.SuspendLayout();
             this.groupBox_local_adress.SuspendLayout();
@@ -190,10 +192,12 @@
             // 
             // groupBox_listener
             // 
+            this.groupBox_listener.Controls.Add(this.label2);
+            this.groupBox_listener.Controls.Add(this.textBox_msg_payload_int);
             this.groupBox_listener.Controls.Add(this.label_payload_ascii);
             this.groupBox_listener.Controls.Add(this.label_payload_byte);
             this.groupBox_listener.Controls.Add(this.textBox_msg_payload_ASCII);
-            this.groupBox_listener.Controls.Add(this.textBox_msg_payload);
+            this.groupBox_listener.Controls.Add(this.textBox_msg_payload_byte);
             this.groupBox_listener.Controls.Add(this.textBox_frame_msg);
             this.groupBox_listener.Controls.Add(this.label_msg);
             this.groupBox_listener.Controls.Add(this.checkBox_start_server);
@@ -201,7 +205,7 @@
             this.groupBox_listener.Controls.Add(this.textBox_srv_port);
             this.groupBox_listener.Location = new System.Drawing.Point(12, 27);
             this.groupBox_listener.Name = "groupBox_listener";
-            this.groupBox_listener.Size = new System.Drawing.Size(313, 134);
+            this.groupBox_listener.Size = new System.Drawing.Size(313, 178);
             this.groupBox_listener.TabIndex = 12;
             this.groupBox_listener.TabStop = false;
             this.groupBox_listener.Text = "listener";
@@ -209,7 +213,7 @@
             // label_payload_ascii
             // 
             this.label_payload_ascii.AutoSize = true;
-            this.label_payload_ascii.Location = new System.Drawing.Point(12, 103);
+            this.label_payload_ascii.Location = new System.Drawing.Point(11, 131);
             this.label_payload_ascii.Name = "label_payload_ascii";
             this.label_payload_ascii.Size = new System.Drawing.Size(71, 13);
             this.label_payload_ascii.TabIndex = 15;
@@ -226,17 +230,17 @@
             // 
             // textBox_msg_payload_ASCII
             // 
-            this.textBox_msg_payload_ASCII.Location = new System.Drawing.Point(89, 100);
+            this.textBox_msg_payload_ASCII.Location = new System.Drawing.Point(88, 128);
             this.textBox_msg_payload_ASCII.Name = "textBox_msg_payload_ASCII";
             this.textBox_msg_payload_ASCII.Size = new System.Drawing.Size(192, 20);
             this.textBox_msg_payload_ASCII.TabIndex = 13;
             // 
-            // textBox_msg_payload
+            // textBox_msg_payload_byte
             // 
-            this.textBox_msg_payload.Location = new System.Drawing.Point(89, 74);
-            this.textBox_msg_payload.Name = "textBox_msg_payload";
-            this.textBox_msg_payload.Size = new System.Drawing.Size(192, 20);
-            this.textBox_msg_payload.TabIndex = 12;
+            this.textBox_msg_payload_byte.Location = new System.Drawing.Point(89, 74);
+            this.textBox_msg_payload_byte.Name = "textBox_msg_payload_byte";
+            this.textBox_msg_payload_byte.Size = new System.Drawing.Size(192, 20);
+            this.textBox_msg_payload_byte.TabIndex = 12;
             // 
             // checkBox_receive_big_endian
             // 
@@ -340,7 +344,7 @@
             this.groupBox_send_msg.Controls.Add(this.radioButton_send_ascii);
             this.groupBox_send_msg.Controls.Add(this.radioButton_send_byte);
             this.groupBox_send_msg.Controls.Add(this.textBox_send_multiplikator);
-            this.groupBox_send_msg.Location = new System.Drawing.Point(12, 167);
+            this.groupBox_send_msg.Location = new System.Drawing.Point(12, 211);
             this.groupBox_send_msg.Name = "groupBox_send_msg";
             this.groupBox_send_msg.Size = new System.Drawing.Size(313, 402);
             this.groupBox_send_msg.TabIndex = 18;
@@ -458,7 +462,7 @@
             this.groupBox_status.Controls.Add(this.richTextBox_fstackLog);
             this.groupBox_status.Location = new System.Drawing.Point(331, 12);
             this.groupBox_status.Name = "groupBox_status";
-            this.groupBox_status.Size = new System.Drawing.Size(783, 432);
+            this.groupBox_status.Size = new System.Drawing.Size(994, 432);
             this.groupBox_status.TabIndex = 24;
             this.groupBox_status.TabStop = false;
             this.groupBox_status.Text = "status";
@@ -475,7 +479,7 @@
             // 
             this.richTextBox_fstackLog.Location = new System.Drawing.Point(9, 19);
             this.richTextBox_fstackLog.Name = "richTextBox_fstackLog";
-            this.richTextBox_fstackLog.Size = new System.Drawing.Size(768, 291);
+            this.richTextBox_fstackLog.Size = new System.Drawing.Size(979, 291);
             this.richTextBox_fstackLog.TabIndex = 22;
             this.richTextBox_fstackLog.Text = "";
             // 
@@ -486,7 +490,7 @@
             this.logFileToolStripMenuItem});
             this.menuStrip_main.Location = new System.Drawing.Point(0, 0);
             this.menuStrip_main.Name = "menuStrip_main";
-            this.menuStrip_main.Size = new System.Drawing.Size(1130, 24);
+            this.menuStrip_main.Size = new System.Drawing.Size(1337, 24);
             this.menuStrip_main.TabIndex = 25;
             this.menuStrip_main.Text = "menuStrip1";
             // 
@@ -504,11 +508,27 @@
             this.logFileToolStripMenuItem.Text = "log file";
             this.logFileToolStripMenuItem.Click += new System.EventHandler(this.logFileToolStripMenuItem_Click);
             // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(12, 105);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(61, 13);
+            this.label2.TabIndex = 17;
+            this.label2.Text = "payload int:";
+            // 
+            // textBox_msg_payload_int
+            // 
+            this.textBox_msg_payload_int.Location = new System.Drawing.Point(89, 102);
+            this.textBox_msg_payload_int.Name = "textBox_msg_payload_int";
+            this.textBox_msg_payload_int.Size = new System.Drawing.Size(192, 20);
+            this.textBox_msg_payload_int.TabIndex = 16;
+            // 
             // FrmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1130, 592);
+            this.ClientSize = new System.Drawing.Size(1337, 625);
             this.Controls.Add(this.groupBox_status);
             this.Controls.Add(this.groupBox_send_msg);
             this.Controls.Add(this.groupBox_listener);
@@ -557,7 +577,7 @@
         private System.Windows.Forms.CheckBox checkBox_receive_big_endian;
         private System.Windows.Forms.TextBox textBox_send_index;
         private System.Windows.Forms.GroupBox groupBox_send_msg;
-        private System.Windows.Forms.TextBox textBox_msg_payload;
+        private System.Windows.Forms.TextBox textBox_msg_payload_byte;
         private System.Windows.Forms.TextBox textBox_msg_payload_ASCII;
         private System.Windows.Forms.Label label_payload_ascii;
         private System.Windows.Forms.Label label_payload_byte;
@@ -578,6 +598,8 @@
         private System.Windows.Forms.MenuStrip menuStrip_main;
         private System.Windows.Forms.ToolStripMenuItem resetToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem logFileToolStripMenuItem;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.TextBox textBox_msg_payload_int;
     }
 }
 

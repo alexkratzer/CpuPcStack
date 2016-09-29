@@ -10,13 +10,13 @@ namespace cpsLIB
 {
     class udp_client
     {
-        net_udp _sender;
+        //net_udp _sender;
         Thread _clientThread;
-        
-        public udp_client(net_udp FrmMain)
-        {
-            this._sender = FrmMain;
-        }
+
+        //public udp_client(net_udp FrmMain)
+        //{
+        //    this._sender = FrmMain;
+        //}
 
         Frame f;
         public void send(Frame f)
@@ -38,9 +38,9 @@ namespace cpsLIB
                 udpClient.Close();
             }
             catch (Exception e) {
-                f.ChangeState(FrameWorkingState.error_send, "Exception send Frame: " + e.Message);
+                f.ChangeState(FrameWorkingState.error, "Exception send Frame: " + e.Message);
             }
-            _sender.client_message(f);
+            //_sender.client_message(f);
         }
     }
 }

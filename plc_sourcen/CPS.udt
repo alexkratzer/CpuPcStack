@@ -1,0 +1,12 @@
+﻿TYPE "UDT_CPSFrame"
+VERSION : 0.1
+   STRUCT
+      "type" : Array[0..3] of Char;
+      index : Int;
+      data : Array[0..511] of Byte;
+      remote_ip : Array[0..3] of USInt;
+      frame_length : UInt;
+   END_STRUCT;
+
+END_TYPE
+

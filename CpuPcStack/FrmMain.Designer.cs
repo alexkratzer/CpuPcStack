@@ -515,7 +515,7 @@
             this.Controls.Add(this.menuStrip_main);
             this.MainMenuStrip = this.menuStrip_main;
             this.Name = "FrmMain";
-            this.Text = "plc interface";
+            this.Text = "CpuPcStack - PLCSourceFile";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FrmMain_FormClosing);
             this.groupBox_client.ResumeLayout(false);
             this.groupBox_client.PerformLayout();

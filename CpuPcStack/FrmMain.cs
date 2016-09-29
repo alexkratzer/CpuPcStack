@@ -210,9 +210,9 @@ namespace CpuPcStack
         private void logSendRcv_fkt(Frame f)
         {
 
-            if (f.sender.Equals(FrameSender.client))
+            if (f.frameSender.Equals(FrameSender.client))
                 richTextBox_fstackLog.AppendText("==> " + f.GetDetailedString() + Environment.NewLine);
-            else if (f.sender.Equals(FrameSender.server))
+            else if (f.frameSender.Equals(FrameSender.server))
                 richTextBox_fstackLog.AppendText("<== " + f.GetDetailedString() + Environment.NewLine);
             else
                 richTextBox_fstackLog.AppendText("[err] " + f.GetDetailedString() + Environment.NewLine);
@@ -245,7 +245,8 @@ namespace CpuPcStack
             richTextBox_fstackLog.AppendText("ITP: " + f.GetDetailedString() + Environment.NewLine);
 
             textBox_frame_msg.Text = f.ToString();
-            textBox_msg_payload.Text = f.getPayload();
+            textBox_msg_payload_byte.Text = f.getPayloadInt();
+            textBox_msg_payload_int.Text = f.getPayloadInt();
             textBox_msg_payload_ASCII.Text = f.getPayloadASCII();
         }
         #endregion
@@ -299,7 +300,7 @@ namespace CpuPcStack
     "TotalFramesReceive" + net_udp.TotalFramesReceive + Environment.NewLine +
     "TotalFramesFinished: " + net_udp.TotalFramesFinished.ToString() + Environment.NewLine +
     "check_trys: " + net_udp.check_trys.ToString() + Environment.NewLine +
-    "fstackLogCount: " + net_udp.fstackLogCount().ToString() + Environment.NewLine;
+    "";//"fstackLogCount: " + net_udp.fstackLogCount().ToString() + Environment.NewLine;
 
 
             //richTextBox_fstack.Clear();

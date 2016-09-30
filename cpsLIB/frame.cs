@@ -50,12 +50,13 @@ namespace cpsLIB
         public string RemoteIp = null;
         public int RemotePort;
         public DateTime TimeCreated; //Zeitstempel an dem das Frame erzeugt wurde
-        private FrameWorkingState WorkingState;
-        private string WorkingStateMessage; //Log Messages zu dem Frame
+        //private FrameWorkingState WorkingState;
+        //private string WorkingStateMessage; //Log Messages zu dem Frame
         public DateTime LastSendDateTime; //Zeitstempel an dem das Frame zuletzt versendet wurde
         public int SendTrys = 0;
         public int index_send = 0;
         public FrameSender frameSender = FrameSender.unknown;
+        private List<frameLog> ListFrameLog;
 
         public static bool SendBigEndian = false; //PC = Little-Endian, CPU = Big-Endian
         public static bool ReceiveBigEndian = false;
@@ -91,6 +92,7 @@ namespace cpsLIB
             CountRcvFrames++;
             TimeCreated = DateTime.Now;
             frameSender = FrameSender.server;
+            ListFrameLog = new List<frameLog>();
 
             ChangeState(FrameWorkingState.created, "make new frame object from rcv UDP Frame");
             
@@ -129,6 +131,7 @@ namespace cpsLIB
             index_send = CountSendFrames;
             TimeCreated = DateTime.Now;
             frameSender = FrameSender.client;
+            ListFrameLog = new List<frameLog>();
             
             RemoteIp = ip;
             _type = type; //zwischenspeichern bisher nicht notwendig
@@ -210,6 +213,23 @@ namespace cpsLIB
                 s += _FramePayload[i].ToString() + ", ";
             return s;
         }
+        /*
+if (_FrameData != null)
+{
+    string s = string.Empty;
+    Int16[] data = GetIntArr(_FrameData);
+    for (int i = 0; i < data.Length; i++)
+        s += data[i].ToString() + ", ";
+
+    s += " byte: ";
+    for (int i = 0; i < _FrameData.Length; i++)
+        s += _FrameData[i].ToString() + ", ";
+
+    return s;
+}
+else
+    return "_FrameData==NULL";
+ * */
 
         public string getPayloadASCII()
         {
@@ -218,26 +238,11 @@ namespace cpsLIB
 
         public override string ToString()
         {
-            if (_FrameData != null)
-            {
-                string s = string.Empty;
-                Int16[] data = GetIntArr(_FrameData);
-                for (int i = 0; i < data.Length; i++)
-                    s += data[i].ToString() + ", ";
-
-                s += " byte: ";
-                for (int i = 0; i < _FrameData.Length; i++)
-                    s += _FrameData[i].ToString() + ", ";
-
-                return s;
-            }
-            else
-                return "_FrameData==NULL";
+            return TimeCreated.ToString("HH:mm:ss:fff") + " (" + frameSender.ToString() + ") " + " " + _type + " " + _index;
         }
 
-        public string GetDetailedString() {
-            return DateTime.Now.ToString("HH:mm:ss:fff") + " (" + index_send.ToString() + ") [" + RemoteIp + ":" + RemotePort + " " + /*TimeCreated.ToString("HH:mm:ss:fff") +*/ " " + _type + " (" + _index + ")] " +
-                " (" + WorkingState.ToString() + ") " + WorkingStateMessage + " {" + this.ToString() + "}";
+        public string GetMetaInfo() {
+            return DateTime.Now.ToString("HH:mm:ss:fff") + " (" + index_send.ToString() + ") [" + RemoteIp + ":" + RemotePort + " " + /*TimeCreated.ToString("HH:mm:ss:fff") +*/ " " + _type + " (" + _index + ")] " ;
         }
 
         /// <summary>
@@ -260,8 +265,9 @@ namespace cpsLIB
         /// <returns>bei gleich TRUE; bei unterschiedlich FALSE</returns>
         public bool isEqualExeptIndex(Frame f)
         {
-            log.msg(this, "isEqualExeptIndex: " + f.GetDetailedString());
-            //if (f.RemoteIp.Equals(RemoteIp) && f._type.Equals(_type))//Beide Frames haben gleichen Type und gleiche Remote IP Adresse
+            log.msg(this, "isEqualExeptIndex: " + f.GetMetaInfo());
+            
+            //f._type.Equals(_type))//Beide Frames haben gleichen Type und gleiche Remote IP Adresse
             if (f.RemoteIp.Equals(RemoteIp))
             {
                 if (f._type.Equals(_type))
@@ -305,16 +311,18 @@ namespace cpsLIB
         /// <returns></returns>
         public FrameRawData ChangeState(FrameWorkingState ws, string msg)
         {
-            WorkingState = ws;
-            WorkingStateMessage = msg;
-
-            //schreibe in log datei
             //log.msg(this, GetDetailedString());
 
             net_udp.err_notify(this);
-            //TODO: schreibe in GUI
-            //oder besser in eine liste des frames mit - id, timestamp, WorkingState, WorkingStateMessage 
+            ListFrameLog.Add(new frameLog(ws, msg));
             return this;
+        }
+
+        public string GetLog() {
+            string s = "";
+            foreach (frameLog fl in ListFrameLog)
+                s += fl.ToString() + Environment.NewLine;
+            return s;
         }
         #endregion
 
@@ -384,6 +392,23 @@ namespace cpsLIB
         }
          * */
         #endregion
+
+        class frameLog {
+            DateTime timestamp;
+            FrameWorkingState ws;
+            string msg;
+
+            public frameLog(FrameWorkingState ws, string msg) {
+                this.ws = ws;
+                this.msg = msg;
+                timestamp = DateTime.Now;
+            }
+            public override string ToString()
+            {
+                return timestamp.ToString("HH:mm:ss:ffff") + " (" + ws.ToString() + ") " + msg;
+            }
+
+        }
     }
 
    

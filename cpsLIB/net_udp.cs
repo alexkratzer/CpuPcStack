@@ -18,7 +18,6 @@ namespace cpsLIB
         private udp_client _udp_client;
         System.Collections.Concurrent.ConcurrentQueue<Frame> _fstack = null;
         private const Int16 MAXCheckTrys = 5; //Anzahl der erlaubten Wiederholungen bei SYNC Telegram
-        private const Int16 MAXSendTrys = 1; //Anzahl der erlaubten Wiederholungen bei Telegram die versendet werden
         //System.Collections.Concurrent.ConcurrentQueue<Frame> _fstackLog = null;
         private const Int16 WATCHDOG_WORK = 5000; //Erlaubte Zeitdauer in ms bis PLC geantwortet haben muss
 
@@ -45,13 +44,18 @@ namespace cpsLIB
         public void send(Frame f)
         {
             if (putFrameToStack(f))
+            {
                 _udp_client.send(f);
+                f.ChangeState(FrameWorkingState.send, "msg from UDPclient to app");
+                TotalFramesSend++;
+                _FrmMain.interprete_frame(f);
+            }
         }
-        public void client_message(Frame f)
-        {
-            f.ChangeState(FrameWorkingState.send, "msg from client to app");
-            TotalFramesSend++;
-        }
+        //public void client_message(Frame f)
+        //{
+        //    f.ChangeState(FrameWorkingState.send, "msg from client to app");
+        //    TotalFramesSend++;
+        //}
         #endregion
 
         #region server
@@ -75,20 +79,19 @@ namespace cpsLIB
 
             //remove frame from "InWork Jobs" Stack
             if (!_fstack.IsEmpty){
-                foreach (Frame frame in _fstack)
-                    if (frame._index == f._index)
+                foreach (Frame frameStack in _fstack)
+                    if (frameStack._index == f._index)
                     {
-                        if (takeFrameFromStack(frame))
+                        if (takeFrameFromStack(frameStack))
                         {
                             TotalFramesFinished++;
-                            
                             f.ChangeState(FrameWorkingState.finish, "takeFrameFromStack - drop this one");
                             //_fstackLog.Enqueue(frame);
                         }
                         else
                         {
                             f.ChangeState(FrameWorkingState.error, "ERROR dequeue Frame from stack... ");
-                            frame.ChangeState(FrameWorkingState.error, "ERROR dequeue Frame from stack... ");
+                            frameStack.ChangeState(FrameWorkingState.error, "ERROR dequeue Frame from stack... ");
                         }
                         return;
                     }
@@ -170,16 +173,16 @@ namespace cpsLIB
                 return 0;
         }
 
-        /// <summary>
-        /// gibt alle frames im stack als string aus
-        /// </summary>
-        public string GetStackAsString() {
+        ///// <summary>
+        ///// gibt alle frames im stack als string aus
+        ///// </summary>
+        //public string GetStackAsString() {
 
-            string s = String.Empty;
-            foreach (Frame f in _fstack)
-                s += f.GetDetailedString() + Environment.NewLine;
-            return s;
-        }
+        //    string s = String.Empty;
+        //    foreach (Frame f in _fstack)
+        //        s += f.GetDetailedString() + Environment.NewLine;
+        //    return s;
+        //}
 
         #region thread worker
         Thread ThreadStackWorker;

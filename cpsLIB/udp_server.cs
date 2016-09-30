@@ -40,7 +40,8 @@ namespace cpsLIB
         public void stop()
         {
             this.listening = false;
-            listener.Close();   
+            if(listener!=null)
+                listener.Close();   
         }
 
         public void receive()
@@ -72,7 +73,8 @@ namespace cpsLIB
                                 "udp_server receive ########### EMPTY MESSAGE ################# ");
 
                         Frame f = new Frame(bytes, groupEP.Address.ToString(), groupEP.Port.ToString());
-                        f.ChangeState(FrameWorkingState.received, "udp server received new frame");
+                        //im konstruktor für empfangs frames gibt es keine Log Liste
+                        //f.ChangeState(FrameWorkingState.received, "udp server received new frame");
                         _sender.receive(f);
                     }
                 }

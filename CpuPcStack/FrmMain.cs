@@ -16,7 +16,8 @@ namespace CpuPcStack
         
         public FrmMain()
         {
-            cpsLIB.log.clear();
+            //cpsLIB.log.clear();
+            log.msg(this, " ### START ###");
             net_udp = new cpsLIB.net_udp(this);
             InitializeComponent();
 
@@ -25,31 +26,51 @@ namespace CpuPcStack
 
             label_host_name.Text = HostName;
             foreach (System.Net.IPAddress ip in hostInfo.AddressList)
-                comboBox_local_ips.Items.Add(ip.ToString());
-            checkBox_start_server.Checked = true;
+                comboBox_local_ips.Items.Add(ip.ToString() );
+
+            net_udp.serverSTART(textBox_srv_port.Text);
 
             init_TimerUpdateGui();
             TimerUpdateGui.Start();
         }
         private void FrmMain_FormClosing(object sender, FormClosingEventArgs e)
         {
-            TimerUpdateGui.Stop();
-
-            if (TimerSendCyclic != null)
-                TimerSendCyclic.Stop();
+            TimerStop();
         }
+
         #region menue
         private void resetToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            richTextBox_fstack.Clear();
-            richTextBox_fstackLog.Clear();
+            listBox_frameLog.Items.Clear();
             net_udp.reset();
         }
         private void logFileToolStripMenuItem_Click(object sender, EventArgs e)
         {
             string tmp = cpsLIB.log.FilePath();
-            System.Diagnostics.Process.Start(tmp);
+            if(System.IO.File.Exists(tmp))
+                System.Diagnostics.Process.Start(tmp);
         }
+        private void startToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            net_udp.serverSTART(textBox_srv_port.Text);   
+        }
+
+        private void stopToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            net_udp.serverSTOP();
+        }
+
+        private void startServerToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            net_udp.serverSTART(textBox_srv_port.Text); 
+        }
+
+        private void stopServerToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            net_udp.serverSTOP();
+        }
+
+
         #endregion
 
         #region GUI send
@@ -133,16 +154,6 @@ namespace CpuPcStack
         }
         #endregion
 
-        #region server GUI
-        private void checkBox_start_server_CheckedChanged(object sender, EventArgs e)
-        {
-            if (checkBox_start_server.Checked)
-                net_udp.serverSTART(textBox_srv_port.Text);
-            else
-                net_udp.serverSTOP();
-        }
-        #endregion
-
         /*
         #region server fkt
         private delegate void interprete_frameCallback(Frame f);
@@ -190,35 +201,42 @@ namespace CpuPcStack
         }
         private void srv_msg_funkt(string s)
         {
-            richTextBox_fstackLog.AppendText("srv_msgCallback: " + s + Environment.NewLine);
+            tssl_server_status.Text = s;
         }
         #endregion
 
+        
         #region logSendRcv
         private delegate void logSendRcvCallback(Frame f);
         void IcpsLIB.logSendRcv(object o)
         {
+            /*
             try
             {
-                this.Invoke(new logSendRcvCallback(this.logSendRcv_fkt), new object[] { o });
+                if (this.InvokeRequired)
+                    this.Invoke(new logSendRcvCallback(this.logSendRcv_fkt), new object[] { o });
+                else
+                    logSendRcv_fkt((Frame)o);
             }
             catch (Exception e)
             {
                 MessageBox.Show("projectIcpsLIB.IcpsLIB.send: " + e.Message, "writing to GUI failed");
             }
         }
+
         private void logSendRcv_fkt(Frame f)
         {
 
             if (f.frameSender.Equals(FrameSender.client))
-                richTextBox_fstackLog.AppendText("==> " + f.GetDetailedString() + Environment.NewLine);
+                richTextBox_fstackLog.AppendText("==> " + f.GetMetaInfo() + Environment.NewLine);
             else if (f.frameSender.Equals(FrameSender.server))
-                richTextBox_fstackLog.AppendText("<== " + f.GetDetailedString() + Environment.NewLine);
+                richTextBox_fstackLog.AppendText("<== " + f.GetMetaInfo() + Environment.NewLine);
             else
-                richTextBox_fstackLog.AppendText("[err] " + f.GetDetailedString() + Environment.NewLine);
+                richTextBox_fstackLog.AppendText("[err] " + f.GetMetaInfo() + Environment.NewLine);
+        * */
         }
-
         #endregion
+         
 
         #region interprete_frame
         private delegate void interprete_frameCallback(Frame f);
@@ -229,10 +247,7 @@ namespace CpuPcStack
                 if (this.InvokeRequired)
                     this.Invoke(new interprete_frameCallback(this.interprete_frame_fkt), new object[] { o });
                 else
-                {
-                    MessageBox.Show("interprete_frameCallback(): " + " this.InvokeRequired == false");
-                    interprete_frame_fkt((cpsLIB.Frame)o);
-                }
+                    interprete_frame_fkt((Frame)o);
             }
             catch (Exception e)
             {
@@ -242,12 +257,7 @@ namespace CpuPcStack
 
         private void interprete_frame_fkt(Frame f)
         {
-            richTextBox_fstackLog.AppendText("ITP: " + f.GetDetailedString() + Environment.NewLine);
-
-            textBox_frame_msg.Text = f.ToString();
-            textBox_msg_payload_byte.Text = f.getPayloadInt();
-            textBox_msg_payload_int.Text = f.getPayloadInt();
-            textBox_msg_payload_ASCII.Text = f.getPayloadASCII();
+            listBox_frameLog.Items.Add(f);
         }
         #endregion
 
@@ -302,14 +312,31 @@ namespace CpuPcStack
     "check_trys: " + net_udp.check_trys.ToString() + Environment.NewLine +
     "";//"fstackLogCount: " + net_udp.fstackLogCount().ToString() + Environment.NewLine;
 
-
-            //richTextBox_fstack.Clear();
-            //if(net_udp.
-            richTextBox_fstack.Text = richTextBox_fstack.Text + Environment.NewLine + net_udp.GetStackAsString();
         }
 
+        private void TimerStop() {
+            TimerUpdateGui.Stop();
+
+            if (TimerSendCyclic != null)
+                TimerSendCyclic.Stop();
+        }
 
         #endregion
+
+        private void listBox_frameLog_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (listBox_frameLog.SelectedItem != null)
+            {
+                Frame f = (Frame)listBox_frameLog.SelectedItem;
+
+                textBox_msg_payload_byte.Text = f.getPayloadInt();
+                textBox_msg_payload_int.Text = f.getPayloadInt();
+                textBox_msg_payload_ASCII.Text = f.getPayloadASCII();
+                //sender
+                label_frameLog.Text = f.GetLog();
+                label_frameMetadata.Text = f.GetMetaInfo();
+            }
+        }
 
 
 

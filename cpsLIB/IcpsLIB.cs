@@ -7,8 +7,8 @@ namespace cpsLIB
 {
     public interface IcpsLIB
     {
-        void interprete_frame(object o);
-        void logSendRcv(object o);
+        void interprete_frame(object o);  //o == Frame
+        void logSendRcv(object o); //o == Frame
         void logMsg(string msg);
     }
 }

@@ -19,11 +19,13 @@ namespace cpsLIB
             String log = DateTime.Now.ToString() + " +++ EXCEPTION +++ [" + o.ToString() + "] " + msg + " -> " + ex.ToString() + Environment.NewLine;
             File.AppendAllText(path, log);
         }
-        public static void clear() {
+        public static void clear()
+        {
             if (File.Exists(path))
                 File.Delete(path);
         }
-        public static string FilePath() {
+        public static string FilePath()
+        {
             return path;
         }
     }

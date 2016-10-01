@@ -72,7 +72,7 @@ namespace cpsLIB
                             _sender.server_message(groupEP.Address.ToString() + ":" + groupEP.Port.ToString() + 
                                 "udp_server receive ########### EMPTY MESSAGE ################# ");
 
-                        Frame f = new Frame(bytes, groupEP.Address.ToString(), groupEP.Port.ToString());
+                        FrameRcv f = new FrameRcv(bytes, groupEP.Address.ToString(), groupEP.Port.ToString());
                         //im konstruktor für empfangs frames gibt es keine Log Liste
                         //f.ChangeState(FrameWorkingState.received, "udp server received new frame");
                         _sender.receive(f);

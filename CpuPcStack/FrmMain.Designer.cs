@@ -432,7 +432,7 @@
             this.groupBox_status.Controls.Add(this.textBox_msg_payload_byte);
             this.groupBox_status.Location = new System.Drawing.Point(331, 12);
             this.groupBox_status.Name = "groupBox_status";
-            this.groupBox_status.Size = new System.Drawing.Size(753, 471);
+            this.groupBox_status.Size = new System.Drawing.Size(894, 471);
             this.groupBox_status.TabIndex = 24;
             this.groupBox_status.TabStop = false;
             this.groupBox_status.Text = "status";
@@ -472,7 +472,7 @@
             this.serverToolStripMenuItem});
             this.menuStrip_main.Location = new System.Drawing.Point(0, 0);
             this.menuStrip_main.Name = "menuStrip_main";
-            this.menuStrip_main.Size = new System.Drawing.Size(1095, 24);
+            this.menuStrip_main.Size = new System.Drawing.Size(1237, 24);
             this.menuStrip_main.TabIndex = 25;
             this.menuStrip_main.Text = "menuStrip1";
             // 
@@ -502,14 +502,14 @@
             // startToolStripMenuItem
             // 
             this.startToolStripMenuItem.Name = "startToolStripMenuItem";
-            this.startToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.startToolStripMenuItem.Size = new System.Drawing.Size(97, 22);
             this.startToolStripMenuItem.Text = "start";
             this.startToolStripMenuItem.Click += new System.EventHandler(this.startToolStripMenuItem_Click);
             // 
             // stopToolStripMenuItem
             // 
             this.stopToolStripMenuItem.Name = "stopToolStripMenuItem";
-            this.stopToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.stopToolStripMenuItem.Size = new System.Drawing.Size(97, 22);
             this.stopToolStripMenuItem.Text = "stop";
             this.stopToolStripMenuItem.Click += new System.EventHandler(this.stopToolStripMenuItem_Click);
             // 
@@ -520,7 +520,7 @@
             this.tssl_server_status});
             this.statusStrip1.Location = new System.Drawing.Point(0, 551);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(1095, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(1237, 22);
             this.statusStrip1.TabIndex = 26;
             this.statusStrip1.Text = "statusStrip1";
             // 
@@ -539,14 +539,14 @@
             // stopServerToolStripMenuItem
             // 
             this.stopServerToolStripMenuItem.Name = "stopServerToolStripMenuItem";
-            this.stopServerToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.stopServerToolStripMenuItem.Size = new System.Drawing.Size(131, 22);
             this.stopServerToolStripMenuItem.Text = "stop server";
             this.stopServerToolStripMenuItem.Click += new System.EventHandler(this.stopServerToolStripMenuItem_Click);
             // 
             // startServerToolStripMenuItem
             // 
             this.startServerToolStripMenuItem.Name = "startServerToolStripMenuItem";
-            this.startServerToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.startServerToolStripMenuItem.Size = new System.Drawing.Size(131, 22);
             this.startServerToolStripMenuItem.Text = "start server";
             this.startServerToolStripMenuItem.Click += new System.EventHandler(this.startServerToolStripMenuItem_Click);
             // 
@@ -560,7 +560,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1095, 573);
+            this.ClientSize = new System.Drawing.Size(1237, 573);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.groupBox_status);
             this.Controls.Add(this.label1);

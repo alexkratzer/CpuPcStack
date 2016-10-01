@@ -12,6 +12,7 @@ namespace CpuPcStack
 {
     public partial class FrmMain : Form, IcpsLIB
     {
+        BindingList<FrameRawData> ListFrames = new BindingList<FrameRawData>();
         cpsLIB.net_udp net_udp;
         
         public FrmMain()
@@ -32,7 +33,10 @@ namespace CpuPcStack
 
             init_TimerUpdateGui();
             TimerUpdateGui.Start();
+
+            listBox_frameLog.DataSource = ListFrames;
         }
+
         private void FrmMain_FormClosing(object sender, FormClosingEventArgs e)
         {
             TimerStop();
@@ -41,7 +45,7 @@ namespace CpuPcStack
         #region menue
         private void resetToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            listBox_frameLog.Items.Clear();
+            //listBox_frameLog.Items.Clear();
             net_udp.reset();
         }
         private void logFileToolStripMenuItem_Click(object sender, EventArgs e)
@@ -207,10 +211,12 @@ namespace CpuPcStack
 
         
         #region logSendRcv
+        /*
         private delegate void logSendRcvCallback(Frame f);
         void IcpsLIB.logSendRcv(object o)
         {
-            /*
+            log.msg(this, "unused funktion: logSendRcv");
+            
             try
             {
                 if (this.InvokeRequired)
@@ -233,13 +239,14 @@ namespace CpuPcStack
                 richTextBox_fstackLog.AppendText("<== " + f.GetMetaInfo() + Environment.NewLine);
             else
                 richTextBox_fstackLog.AppendText("[err] " + f.GetMetaInfo() + Environment.NewLine);
-        * */
+        
         }
+         * * */
         #endregion
-         
+
 
         #region interprete_frame
-        private delegate void interprete_frameCallback(Frame f);
+        private delegate void interprete_frameCallback(object f);
         void IcpsLIB.interprete_frame(object o)
         {
             try
@@ -247,17 +254,26 @@ namespace CpuPcStack
                 if (this.InvokeRequired)
                     this.Invoke(new interprete_frameCallback(this.interprete_frame_fkt), new object[] { o });
                 else
-                    interprete_frame_fkt((Frame)o);
+                    interprete_frame_fkt(o);
             }
             catch (Exception e)
             {
-                MessageBox.Show("NetUdpFrameCallback: " + e.Message, "writing to GUI failed");
+                MessageBox.Show("interprete_frameCallback: " + e.Message, "writing to GUI failed");
             }
         }
 
-        private void interprete_frame_fkt(Frame f)
+        
+        private void interprete_frame_fkt(object f)
         {
-            listBox_frameLog.Items.Add(f);
+            FrameRawData _f = (FrameRawData)f;
+            _f.ChangeState(FrameWorkingState.inWork, "frame @FrmMain: interprete_frame_fkt");
+
+            //TODO: ############################# 
+            //if(_f.frameState.Equals(FrameState.ERROR)
+
+            ListFrames.Add(_f);
+            //listBox_frameLog.Items.Add(f);
+
         }
         #endregion
 
@@ -306,8 +322,8 @@ namespace CpuPcStack
             label1.Text =
     "state: " + net_udp.state.ToString() + Environment.NewLine +
     "InWorkFrameCount: " + net_udp.InWorkFrameCount() + Environment.NewLine +
-    "TotalFramesSend: " + net_udp.TotalFramesSend + Environment.NewLine +
-    "TotalFramesReceive" + net_udp.TotalFramesReceive + Environment.NewLine +
+    "TotalFramesSend: " + Frame.CountSendFrames + Environment.NewLine +
+    "TotalFramesReceive" + Frame.CountRcvFrames + Environment.NewLine +
     "TotalFramesFinished: " + net_udp.TotalFramesFinished.ToString() + Environment.NewLine +
     "check_trys: " + net_udp.check_trys.ToString() + Environment.NewLine +
     "";//"fstackLogCount: " + net_udp.fstackLogCount().ToString() + Environment.NewLine;
@@ -327,9 +343,9 @@ namespace CpuPcStack
         {
             if (listBox_frameLog.SelectedItem != null)
             {
-                Frame f = (Frame)listBox_frameLog.SelectedItem;
+                FrameRawData f = (FrameRawData)listBox_frameLog.SelectedItem;
 
-                textBox_msg_payload_byte.Text = f.getPayloadInt();
+                textBox_msg_payload_byte.Text = f.getPayloadByte();
                 textBox_msg_payload_int.Text = f.getPayloadInt();
                 textBox_msg_payload_ASCII.Text = f.getPayloadASCII();
                 //sender

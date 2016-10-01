@@ -7,26 +7,31 @@ using System.Windows.Forms;
 
 namespace cpsLIB
 {
+    //TODO: für jede neue client anfrage eine liste mit status der verbindung verwalten.
+    //als key für den datensatz die Remote IP verwenden
+
     public enum udp_state { unknown, connected, disconnected, error }
     public enum msg_type { undef, info, warning, error }
     public class net_udp
     {
-       
-        // intern
+        private const Int16 MaxSYNCResendTrys = 3; //Anzahl der erlaubten Wiederholungen bei SYNC Telegram
+        private const Int16 WATCHDOG_WORK = 2000; //Erlaubte Zeitdauer in ms bis PLC geantwortet haben muss
+        private const bool SendFramesCallback = true; //es werden die "zu sendenden frames" als callback zurückgeliefert
+
         public static IcpsLIB _FrmMain;
         private udp_server _udp_server;
         private udp_client _udp_client;
         System.Collections.Concurrent.ConcurrentQueue<Frame> _fstack = null;
-        private const Int16 MAXCheckTrys = 5; //Anzahl der erlaubten Wiederholungen bei SYNC Telegram
+        
+        //TODO: alle frames in liste speichern
         //System.Collections.Concurrent.ConcurrentQueue<Frame> _fstackLog = null;
-        private const Int16 WATCHDOG_WORK = 5000; //Erlaubte Zeitdauer in ms bis PLC geantwortet haben muss
 
         /// <summary>
         /// status schnittstelle
         /// </summary>
         public udp_state state;
-        public int TotalFramesSend = 0;
-        public int TotalFramesReceive = 0;
+        //public int TotalFramesSend = 0;
+        //public int TotalFramesReceive = 0;
         public int TotalFramesFinished = 0; //Frames die auf eine anfrage hin empfangen wurden und verarbeitet werden können
         public Int16 check_trys;
        
@@ -47,15 +52,12 @@ namespace cpsLIB
             {
                 _udp_client.send(f);
                 f.ChangeState(FrameWorkingState.send, "msg from UDPclient to app");
-                TotalFramesSend++;
-                _FrmMain.interprete_frame(f);
+                
+                //der App wird mitgeteilt das dieses frame verschickt wurde
+                if (SendFramesCallback)
+                    _FrmMain.interprete_frame(f);
             }
         }
-        //public void client_message(Frame f)
-        //{
-        //    f.ChangeState(FrameWorkingState.send, "msg from client to app");
-        //    TotalFramesSend++;
-        //}
         #endregion
 
         #region server
@@ -71,13 +73,14 @@ namespace cpsLIB
             _FrmMain.logMsg(msg);
         }
 
-        public void receive(Frame f)
+        public void receive(FrameRcv f)
         {
-            _FrmMain.interprete_frame(f);
-            TotalFramesReceive++;
             state = udp_state.connected;
 
-            //remove frame from "InWork Jobs" Stack
+            //received frame will be passed to the main application
+            _FrmMain.interprete_frame(f);
+
+            //remove frame from "InWork Jobs" 
             if (!_fstack.IsEmpty){
                 foreach (Frame frameStack in _fstack)
                     if (frameStack._index == f._index)
@@ -86,13 +89,10 @@ namespace cpsLIB
                         {
                             TotalFramesFinished++;
                             f.ChangeState(FrameWorkingState.finish, "takeFrameFromStack - drop this one");
-                            //_fstackLog.Enqueue(frame);
                         }
                         else
-                        {
                             f.ChangeState(FrameWorkingState.error, "ERROR dequeue Frame from stack... ");
-                            frameStack.ChangeState(FrameWorkingState.error, "ERROR dequeue Frame from stack... ");
-                        }
+
                         return;
                     }
                 }
@@ -100,15 +100,9 @@ namespace cpsLIB
         }
         #endregion
 
-        public static void err_notify(FrameRawData f) {
-            _FrmMain.logSendRcv(f); 
-        }
-
         public void reset()
         {
             state = udp_state.unknown;
-            TotalFramesSend = 0;
-            TotalFramesReceive = 0;
             TotalFramesFinished = 0;
             check_trys = 0;
         }
@@ -124,22 +118,20 @@ namespace cpsLIB
 
         #region handle frame stack       
         /// <summary>
-        /// neuen frame von stack holen und über tcp client versenden
+        /// frame aus stack löschen
         /// </summary>
         /// <returns></returns>
         private bool takeFrameFromStack(Frame f)
         {
-            if (_fstack.IsEmpty)
-                return false;
-            else
-                if (_fstack.TryDequeue(out f))
-                {
-                    //_fstackLog.Enqueue(f);
-                    f.ChangeState(FrameWorkingState.finish, "Dequeue frame from stack");
-                    return true;
-                }
-                else
-                    return false;
+            if (_fstack.TryDequeue(out f))
+            {
+                f.ChangeState(FrameWorkingState.finish, "Dequeue frame from stack");        
+                return true;
+            }
+
+            f.ChangeState(FrameWorkingState.error, "ERROR dequeue Frame from stack... ");
+            return false;
+            
         }
 
         /// <summary>
@@ -153,6 +145,7 @@ namespace cpsLIB
         {
             if(!_fstack.IsEmpty)
                 foreach (Frame frame in _fstack)
+                {
                     if (frame.isEqualExeptIndex(f))
                     {
                         f.ChangeState(FrameWorkingState.error, "Frame already in send buffer");
@@ -160,6 +153,8 @@ namespace cpsLIB
                         Thread.Sleep(100);
                         return false;
                     }
+                }
+
             f.ChangeState(FrameWorkingState.inWork, "Frame put to Stack");
             _fstack.Enqueue(f);
             return true;
@@ -183,7 +178,7 @@ namespace cpsLIB
         //        s += f.GetDetailedString() + Environment.NewLine;
         //    return s;
         //}
-
+        #endregion
         #region thread worker
         Thread ThreadStackWorker;
         private void StackWorker()
@@ -204,40 +199,35 @@ namespace cpsLIB
                 {
                     foreach (Frame f in _fstack)
                     {
-                        /*
-                         //TODO funktionalität "resend" evtl rückbauen oder nur in Telegram SYNC verwenden
-                        if (range_time > f.LastSendDateTime)
-                            if (f.SendTrys <= MAXSendTrys)
+                        if (f.LastSendDateTime.AddMilliseconds(WATCHDOG_WORK) < DateTime.Now) {
+
+                            if (f._type.Equals(FrameType.SYNC.ToString()))
                             {
-                                
-                                f.SendTrys++;
-                                f.LastSendDateTime = DateTime.Now;
-                                f.ChangeState(FrameWorkingState.warning, "repeat send: (" + f.SendTrys.ToString() + ")");
-                                _udp_client.send(f);
+                                if (f.SendTrys < MaxSYNCResendTrys)
+                                {
+                                    f.SendTrys++;
+                                    f.LastSendDateTime = DateTime.Now;
+                                    f.ChangeState(FrameWorkingState.warning, "repeat send: (" + f.SendTrys.ToString() + ")");
+                                    _udp_client.send(f);
+                                }
+                                else
+                                {
+                                    f.ChangeState(FrameWorkingState.error, "stop sending at try: (" + f.SendTrys.ToString() + ")");
+                                    takeFrameFromStack(f);
+                                }
                             }
                             else
                             {
-                                f.ChangeState(FrameWorkingState.error, "stop sending at try: (" + f.SendTrys.ToString() + ")");                               
-                                //_fstackLog.Enqueue(f);
+                                f.ChangeState(FrameWorkingState.error, "no answer to sendrequest");
                                 takeFrameFromStack(f);
                             }
-                         */
-                        DateTime tmp = f.TimeCreated;
-                        tmp = tmp.AddMilliseconds(WATCHDOG_WORK);
-                        if (tmp < DateTime.Now) {
-                            f.ChangeState(FrameWorkingState.error, "no answer to sendrequest");
-                            //_fstackLog.Enqueue(f);
-                            takeFrameFromStack(f);
                         }
-
                     }
-                    
                 }
                 Thread.Sleep(100);
             }
-
         }
         #endregion
-        #endregion
+        
     }
 }

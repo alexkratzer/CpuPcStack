@@ -78,7 +78,7 @@ namespace cpsLIB
         public static Int16[] SET_STATE(int index, string position, string angle) { return new Int16[] { Convert.ToInt16(index), 2, Convert.ToInt16(position), Convert.ToInt16(angle), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; }
         public static Int16[] SET_STATE(int index, bool state_switch) { return new Int16[] { Convert.ToInt16(index), 2, Convert.ToInt16(state_switch), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; }
         public static Frame FRAME_SYNC(Int16 index, string ip, string port) {
-            return new Frame(FrameType.SYNC.ToString(), index, ip, port);
+            return new Frame(ip, port, FrameType.SYNC.ToString(), index);
             /*
              Frame f = new Frame(FrameType.SYNC.ToString(), check_trys, textBox_remote_ip.Text, textBox_remotePort.Text);
              */ 
@@ -94,7 +94,7 @@ namespace cpsLIB
         /// <param name="data">actual message</param>
         /// <param name="ip">ip from remote sender</param>
         /// <param name="port">port from remote sender</param>
-        public FrameRawData(byte[] data, string ip, string port)
+        public FrameRawData(string ip, string port, byte[] data)
         {
             CountRcvFrames++;
             index_SendRcv = CountRcvFrames;
@@ -136,7 +136,7 @@ namespace cpsLIB
         /// <param name="type"></param>
         /// <param name="index"></param>
         /// <param name="data"></param>
-        public FrameRawData(string type, Int16 index, byte[] bdata, string ip, string port)
+        public FrameRawData(string ip, string port, string type, Int16 index, byte[] bdata)
         {
             CountSendFrames++;
             index_SendRcv = CountSendFrames;
@@ -260,7 +260,6 @@ namespace cpsLIB
         public override string ToString()
         {
             return GetMetaInfo();
-            //return TimeCreated.ToString("HH:mm:ss:fff") + " ("+ frameState.ToString() + "/" + frameSender.ToString() + ") " + _type + " " + _index;
         }
 
         public string GetLog()
@@ -272,7 +271,7 @@ namespace cpsLIB
         }
 
         public string GetMetaInfo() {
-            return TimeCreated.ToString("HH:mm:ss:fff") + " (" + frameState.ToString() + "/" + frameSender.ToString() + ") " + " (" + index_SendRcv.ToString() + ") [" + RemoteIp + ":" + RemotePort + " " + _type + " (" + _index + ")] ";
+            return TimeCreated.ToString("HH:mm:ss:fff") + " (" + frameState.ToString() + "/" + frameSender.ToString() + "/" + index_SendRcv.ToString() + ") [" + RemoteIp + ":" + RemotePort + " " + _type + " (" + _index + ")] ";
         }
         #endregion
 
@@ -300,7 +299,7 @@ namespace cpsLIB
             //TODO wird nicht oft durchlaufen, evtl nur bei hoher last
             //log.msg(this, "isEqualExeptIndex: " + f.GetMetaInfo());
             
-            //f._type.Equals(_type))//Beide Frames haben gleichen Type und gleiche Remote IP Adresse
+            //Beide Frames haben gleichen Type und gleiche Remote IP Adresse
             if (f.RemoteIp.Equals(RemoteIp))
             {
                 if (f._type.Equals(_type))
@@ -347,7 +346,7 @@ namespace cpsLIB
             //log.msg(this, GetDetailedString());
             if (ws.Equals(FrameWorkingState.error))
                 frameState = FrameState.ERROR;
-            //net_udp.err_notify(this);
+            
             ListFrameLog.Add(new frameLog(ws, msg));
             return this;
         }
@@ -452,8 +451,8 @@ namespace cpsLIB
         /// <summary>
         /// frame das von stream über udp empfangen wird
         /// </summary>
-        public FrameRcv(byte[] data, string ip, string port) :
-            base(data, ip, port) { }
+        public FrameRcv(string ip, string port, byte[] data) :
+            base(ip, port, data) { }
 
     }
 
@@ -463,17 +462,17 @@ namespace cpsLIB
         /// <summary>
         /// sync frame ohne content
         /// </summary>
-        public Frame(string type, Int16 index, string ip, string port) : 
-            base(type, index, new byte []{}, ip, port){}
+        public Frame(string ip, string port, string type, Int16 index) :
+            base(ip, port, type, index, new byte[] { }) { }
 
         /// <summary>
         /// normale frames die versendet werden
         /// </summary>
-        public Frame(string type, Int16 index, Int16[] data, string ip, string port) :
-            base(type, index, getByteArray(data), ip, port) { }
+        public Frame(string ip, string port, string type, Int16 index, Int16[] data) :
+            base(ip, port, type, index, getByteArray(data)) { }
 
-        public Frame(string type, Int16 index, char[] data, string ip, string port) :
-            base(type, index, getByteArray(data), ip, port){}
+        public Frame(string ip, string port, string type, Int16 index, char[] data) :
+            base(ip, port, type, index, getByteArray(data)) { }
 
 
 

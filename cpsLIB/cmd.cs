@@ -11,8 +11,8 @@ namespace cpsLIB
     //als key für den datensatz die Remote IP verwenden
 
     public enum udp_state { unknown, connected, disconnected, error }
-    public enum msg_type { undef, info, warning, error }
-    public class net_udp
+    //public enum msg_type { undef, info, warning, error }
+    public class cmd
     {
         private const Int16 MaxSYNCResendTrys = 3; //Anzahl der erlaubten Wiederholungen bei SYNC Telegram
         private const Int16 WATCHDOG_WORK = 2000; //Erlaubte Zeitdauer in ms bis PLC geantwortet haben muss
@@ -36,7 +36,7 @@ namespace cpsLIB
         public Int16 check_trys;
        
         //Constructor
-        public net_udp(IcpsLIB FrmMain) {
+        public cmd(IcpsLIB FrmMain) {
             _FrmMain = FrmMain;
             state = udp_state.unknown;
             _udp_client = new udp_client();
@@ -75,6 +75,7 @@ namespace cpsLIB
 
         public void receive(FrameRcv f)
         {
+            //TODO: handle different IP requests in list
             state = udp_state.connected;
 
             //received frame will be passed to the main application
@@ -85,6 +86,7 @@ namespace cpsLIB
                 foreach (Frame frameStack in _fstack)
                     if (frameStack._index == f._index)
                     {
+                        //+++++++++++++++++ matching rcv frame to frame in stack +++++++++++++++++++
                         if (takeFrameFromStack(frameStack))
                         {
                             TotalFramesFinished++;
@@ -97,6 +99,7 @@ namespace cpsLIB
                     }
                 }
             f.ChangeState(FrameWorkingState.error, "received udp frame without request...");
+            _FrmMain.logMsg("received udp frame without request...");
         }
         #endregion
 
@@ -109,7 +112,7 @@ namespace cpsLIB
 
         #region check connection
         public void check_connection(string ip, string port){
-            Frame f = new Frame(FrameType.SYNC.ToString(), check_trys, ip, port);
+            Frame f = new Frame(ip, port, FrameType.SYNC.ToString(), check_trys);
             send(f);
             check_trys++;
             state = udp_state.disconnected;
@@ -200,7 +203,7 @@ namespace cpsLIB
                     foreach (Frame f in _fstack)
                     {
                         if (f.LastSendDateTime.AddMilliseconds(WATCHDOG_WORK) < DateTime.Now) {
-
+                            //hit Watchdog
                             if (f._type.Equals(FrameType.SYNC.ToString()))
                             {
                                 if (f.SendTrys < MaxSYNCResendTrys)

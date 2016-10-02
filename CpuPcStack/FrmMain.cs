@@ -13,13 +13,13 @@ namespace CpuPcStack
     public partial class FrmMain : Form, IcpsLIB
     {
         BindingList<FrameRawData> ListFrames = new BindingList<FrameRawData>();
-        cpsLIB.net_udp net_udp;
+        cpsLIB.cmd cpsCMD;
         
         public FrmMain()
         {
             //cpsLIB.log.clear();
             log.msg(this, " ### START ###");
-            net_udp = new cpsLIB.net_udp(this);
+            cpsCMD = new cpsLIB.cmd(this);
             InitializeComponent();
 
             string HostName = System.Net.Dns.GetHostName();
@@ -29,7 +29,7 @@ namespace CpuPcStack
             foreach (System.Net.IPAddress ip in hostInfo.AddressList)
                 comboBox_local_ips.Items.Add(ip.ToString() );
 
-            net_udp.serverSTART(textBox_srv_port.Text);
+            cpsCMD.serverSTART(textBox_srv_port.Text);
 
             init_TimerUpdateGui();
             TimerUpdateGui.Start();
@@ -46,7 +46,7 @@ namespace CpuPcStack
         private void resetToolStripMenuItem_Click(object sender, EventArgs e)
         {
             //listBox_frameLog.Items.Clear();
-            net_udp.reset();
+            cpsCMD.reset();
         }
         private void logFileToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -56,22 +56,22 @@ namespace CpuPcStack
         }
         private void startToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            net_udp.serverSTART(textBox_srv_port.Text);   
+            cpsCMD.serverSTART(textBox_srv_port.Text);   
         }
 
         private void stopToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            net_udp.serverSTOP();
+            cpsCMD.serverSTOP();
         }
 
         private void startServerToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            net_udp.serverSTART(textBox_srv_port.Text); 
+            cpsCMD.serverSTART(textBox_srv_port.Text); 
         }
 
         private void stopServerToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            net_udp.serverSTOP();
+            cpsCMD.serverSTOP();
         }
 
 
@@ -84,7 +84,7 @@ namespace CpuPcStack
         }
         private void button_check_Click(object sender, EventArgs e)
         {
-            net_udp.check_connection(textBox_remote_ip.Text, textBox_remotePort.Text);
+            cpsCMD.check_connection(textBox_remote_ip.Text, textBox_remotePort.Text);
         }
         private void button_send_repeat_Click(object sender, EventArgs e)
         {
@@ -112,18 +112,18 @@ namespace CpuPcStack
                     for (int i = 0; i < msg.Length; i++)
                         intArray[i] = Int16.Parse(msg[i]);
 
-                    f = new cpsLIB.Frame(comboBox_frame_type.Text, counter, intArray, textBox_remote_ip.Text, textBox_remotePort.Text);
+                    f = new Frame(textBox_remote_ip.Text, textBox_remotePort.Text, comboBox_frame_type.Text, counter, intArray);
 
                 }
                 else
                 {
                     //#### frame aus payload chars erstellen
                     char[] strArray = StrToChr(msg);
-                    f = new cpsLIB.Frame(comboBox_frame_type.Text, counter, strArray, textBox_remote_ip.Text, textBox_remotePort.Text);
+                    f = new cpsLIB.Frame(textBox_remote_ip.Text, textBox_remotePort.Text, comboBox_frame_type.Text, counter, strArray);
                 }
 
                 for (int i = 0; i < Convert.ToInt32(textBox_send_multiplikator.Text); i++)
-                    net_udp.send(f);
+                    cpsCMD.send(f);
             }
             else
                 MessageBox.Show("ERROR, payload is empty");
@@ -209,8 +209,39 @@ namespace CpuPcStack
         }
         #endregion
 
+        #region interprete_frame
+        private delegate void interprete_frameCallback(object f);
+        void IcpsLIB.interprete_frame(object o)
+        {
+            try
+            {
+                if (this.InvokeRequired)
+                    this.Invoke(new interprete_frameCallback(this.interprete_frame_fkt), new object[] { o });
+                else
+                    interprete_frame_fkt(o);
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show("interprete_frameCallback: " + e.Message, "writing to GUI failed");
+            }
+        }
+
         
-        #region logSendRcv
+        private void interprete_frame_fkt(object f)
+        {
+            FrameRawData _f = (FrameRawData)f;
+            _f.ChangeState(FrameWorkingState.inWork, "frame @FrmMain: interprete_frame_fkt");
+
+            //TODO: ############################# 
+            //if(_f.frameState.Equals(FrameState.ERROR)
+
+            ListFrames.Add(_f);
+            //listBox_frameLog.Items.Add(f);
+
+        }
+        #endregion
+
+        #region unused logSendRcv
         /*
         private delegate void logSendRcvCallback(Frame f);
         void IcpsLIB.logSendRcv(object o)
@@ -242,39 +273,6 @@ namespace CpuPcStack
         
         }
          * * */
-        #endregion
-
-
-        #region interprete_frame
-        private delegate void interprete_frameCallback(object f);
-        void IcpsLIB.interprete_frame(object o)
-        {
-            try
-            {
-                if (this.InvokeRequired)
-                    this.Invoke(new interprete_frameCallback(this.interprete_frame_fkt), new object[] { o });
-                else
-                    interprete_frame_fkt(o);
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show("interprete_frameCallback: " + e.Message, "writing to GUI failed");
-            }
-        }
-
-        
-        private void interprete_frame_fkt(object f)
-        {
-            FrameRawData _f = (FrameRawData)f;
-            _f.ChangeState(FrameWorkingState.inWork, "frame @FrmMain: interprete_frame_fkt");
-
-            //TODO: ############################# 
-            //if(_f.frameState.Equals(FrameState.ERROR)
-
-            ListFrames.Add(_f);
-            //listBox_frameLog.Items.Add(f);
-
-        }
         #endregion
 
         #endregion
@@ -320,13 +318,13 @@ namespace CpuPcStack
         private void TimerUpdateGui_Tick(object sender, EventArgs e)
         {
             label1.Text =
-    "state: " + net_udp.state.ToString() + Environment.NewLine +
-    "InWorkFrameCount: " + net_udp.InWorkFrameCount() + Environment.NewLine +
+    "state: " + cpsCMD.state.ToString() + Environment.NewLine +
+    "InWorkFrameCount: " + cpsCMD.InWorkFrameCount() + Environment.NewLine +
     "TotalFramesSend: " + Frame.CountSendFrames + Environment.NewLine +
     "TotalFramesReceive" + Frame.CountRcvFrames + Environment.NewLine +
-    "TotalFramesFinished: " + net_udp.TotalFramesFinished.ToString() + Environment.NewLine +
-    "check_trys: " + net_udp.check_trys.ToString() + Environment.NewLine +
-    "";//"fstackLogCount: " + net_udp.fstackLogCount().ToString() + Environment.NewLine;
+    "TotalFramesFinished: " + cpsCMD.TotalFramesFinished.ToString() + Environment.NewLine +
+    "check_trys: " + cpsCMD.check_trys.ToString() + Environment.NewLine +
+    "";//"fstackLogCount: " + cpsCMD.fstackLogCount().ToString() + Environment.NewLine;
 
         }
 

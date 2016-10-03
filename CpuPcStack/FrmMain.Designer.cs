@@ -59,30 +59,36 @@
             this.checkBox_cyclic = new System.Windows.Forms.CheckBox();
             this.textBox_timer_interval = new System.Windows.Forms.TextBox();
             this.label_repeat = new System.Windows.Forms.Label();
+            this.textBox_send_multiplikator = new System.Windows.Forms.TextBox();
             this.radioButton_send_ascii = new System.Windows.Forms.RadioButton();
             this.radioButton_send_byte = new System.Windows.Forms.RadioButton();
-            this.textBox_send_multiplikator = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.groupBox_status = new System.Windows.Forms.GroupBox();
             this.label_frameMetadata = new System.Windows.Forms.Label();
             this.label_frameLog = new System.Windows.Forms.Label();
             this.listBox_frameLog = new System.Windows.Forms.ListBox();
             this.menuStrip_main = new System.Windows.Forms.MenuStrip();
-            this.resetToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.logFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.serverToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.startToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.stopToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip1 = new System.Windows.Forms.StatusStrip();
             this.toolStripDropDownButton1 = new System.Windows.Forms.ToolStripDropDownButton();
             this.stopServerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.startServerToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.statusToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tssl_server_status = new System.Windows.Forms.ToolStripStatusLabel();
+            this.groupBox_settings = new System.Windows.Forms.GroupBox();
+            this.checkBox_SendOnlyIfConnected = new System.Windows.Forms.CheckBox();
+            this.checkBox_SendFramesCallback = new System.Windows.Forms.CheckBox();
+            this.textBox_WATCHDOG_WORK = new System.Windows.Forms.TextBox();
+            this.label_WATCHDOG_WORK = new System.Windows.Forms.Label();
+            this.textBox_MaxSYNCResendTrys = new System.Windows.Forms.TextBox();
+            this.label_MaxSYNCResendTrys_desc = new System.Windows.Forms.Label();
             this.groupBox_client.SuspendLayout();
             this.groupBox_send_msg.SuspendLayout();
             this.groupBox_status.SuspendLayout();
             this.menuStrip_main.SuspendLayout();
             this.statusStrip1.SuspendLayout();
+            this.groupBox_settings.SuspendLayout();
             this.SuspendLayout();
             // 
             // label_ip
@@ -105,7 +111,7 @@
             this.groupBox_client.Controls.Add(this.label_port);
             this.groupBox_client.Controls.Add(this.textBox_remote_ip);
             this.groupBox_client.Controls.Add(this.label_ip);
-            this.groupBox_client.Location = new System.Drawing.Point(12, 131);
+            this.groupBox_client.Location = new System.Drawing.Point(12, 105);
             this.groupBox_client.Name = "groupBox_client";
             this.groupBox_client.Size = new System.Drawing.Size(313, 96);
             this.groupBox_client.TabIndex = 1;
@@ -191,9 +197,9 @@
             // 
             // button_send_request
             // 
-            this.button_send_request.Location = new System.Drawing.Point(9, 50);
+            this.button_send_request.Location = new System.Drawing.Point(161, 50);
             this.button_send_request.Name = "button_send_request";
-            this.button_send_request.Size = new System.Drawing.Size(292, 23);
+            this.button_send_request.Size = new System.Drawing.Size(140, 23);
             this.button_send_request.TabIndex = 11;
             this.button_send_request.Text = "send";
             this.button_send_request.UseVisualStyleBackColor = true;
@@ -250,7 +256,7 @@
             // checkBox_receive_big_endian
             // 
             this.checkBox_receive_big_endian.AutoSize = true;
-            this.checkBox_receive_big_endian.Location = new System.Drawing.Point(9, 120);
+            this.checkBox_receive_big_endian.Location = new System.Drawing.Point(9, 37);
             this.checkBox_receive_big_endian.Name = "checkBox_receive_big_endian";
             this.checkBox_receive_big_endian.Size = new System.Drawing.Size(112, 17);
             this.checkBox_receive_big_endian.TabIndex = 12;
@@ -261,7 +267,7 @@
             // checkBox_send_big_endian
             // 
             this.checkBox_send_big_endian.AutoSize = true;
-            this.checkBox_send_big_endian.Location = new System.Drawing.Point(9, 100);
+            this.checkBox_send_big_endian.Location = new System.Drawing.Point(9, 17);
             this.checkBox_send_big_endian.Name = "checkBox_send_big_endian";
             this.checkBox_send_big_endian.Size = new System.Drawing.Size(100, 17);
             this.checkBox_send_big_endian.TabIndex = 11;
@@ -301,22 +307,18 @@
             this.groupBox_send_msg.Controls.Add(this.checkBox_cyclic);
             this.groupBox_send_msg.Controls.Add(this.textBox_send_index);
             this.groupBox_send_msg.Controls.Add(this.textBox_timer_interval);
-            this.groupBox_send_msg.Controls.Add(this.checkBox_send_big_endian);
             this.groupBox_send_msg.Controls.Add(this.label_repeat);
-            this.groupBox_send_msg.Controls.Add(this.checkBox_receive_big_endian);
-            this.groupBox_send_msg.Controls.Add(this.radioButton_send_ascii);
-            this.groupBox_send_msg.Controls.Add(this.radioButton_send_byte);
             this.groupBox_send_msg.Controls.Add(this.textBox_send_multiplikator);
-            this.groupBox_send_msg.Location = new System.Drawing.Point(12, 233);
+            this.groupBox_send_msg.Location = new System.Drawing.Point(12, 207);
             this.groupBox_send_msg.Name = "groupBox_send_msg";
-            this.groupBox_send_msg.Size = new System.Drawing.Size(313, 250);
+            this.groupBox_send_msg.Size = new System.Drawing.Size(313, 151);
             this.groupBox_send_msg.TabIndex = 18;
             this.groupBox_send_msg.TabStop = false;
             this.groupBox_send_msg.Text = "send message";
             // 
             // button_send_repeat
             // 
-            this.button_send_repeat.Location = new System.Drawing.Point(218, 204);
+            this.button_send_repeat.Location = new System.Drawing.Point(224, 109);
             this.button_send_repeat.Name = "button_send_repeat";
             this.button_send_repeat.Size = new System.Drawing.Size(75, 23);
             this.button_send_repeat.TabIndex = 28;
@@ -327,7 +329,7 @@
             // label_send_times
             // 
             this.label_send_times.AutoSize = true;
-            this.label_send_times.Location = new System.Drawing.Point(132, 210);
+            this.label_send_times.Location = new System.Drawing.Point(138, 115);
             this.label_send_times.Name = "label_send_times";
             this.label_send_times.Size = new System.Drawing.Size(80, 13);
             this.label_send_times.TabIndex = 27;
@@ -335,7 +337,7 @@
             // 
             // button_check
             // 
-            this.button_check.Location = new System.Drawing.Point(9, 169);
+            this.button_check.Location = new System.Drawing.Point(9, 50);
             this.button_check.Name = "button_check";
             this.button_check.Size = new System.Drawing.Size(112, 23);
             this.button_check.TabIndex = 26;
@@ -346,7 +348,7 @@
             // label_cyclic_desc
             // 
             this.label_cyclic_desc.AutoSize = true;
-            this.label_cyclic_desc.Location = new System.Drawing.Point(287, 149);
+            this.label_cyclic_desc.Location = new System.Drawing.Point(279, 86);
             this.label_cyclic_desc.Name = "label_cyclic_desc";
             this.label_cyclic_desc.Size = new System.Drawing.Size(20, 13);
             this.label_cyclic_desc.TabIndex = 25;
@@ -355,7 +357,7 @@
             // checkBox_cyclic
             // 
             this.checkBox_cyclic.AutoSize = true;
-            this.checkBox_cyclic.Location = new System.Drawing.Point(164, 148);
+            this.checkBox_cyclic.Location = new System.Drawing.Point(161, 83);
             this.checkBox_cyclic.Name = "checkBox_cyclic";
             this.checkBox_cyclic.Size = new System.Drawing.Size(53, 17);
             this.checkBox_cyclic.TabIndex = 24;
@@ -365,7 +367,7 @@
             // 
             // textBox_timer_interval
             // 
-            this.textBox_timer_interval.Location = new System.Drawing.Point(237, 146);
+            this.textBox_timer_interval.Location = new System.Drawing.Point(229, 83);
             this.textBox_timer_interval.Name = "textBox_timer_interval";
             this.textBox_timer_interval.Size = new System.Drawing.Size(44, 20);
             this.textBox_timer_interval.TabIndex = 23;
@@ -374,16 +376,24 @@
             // label_repeat
             // 
             this.label_repeat.AutoSize = true;
-            this.label_repeat.Location = new System.Drawing.Point(9, 210);
+            this.label_repeat.Location = new System.Drawing.Point(15, 115);
             this.label_repeat.Name = "label_repeat";
             this.label_repeat.Size = new System.Drawing.Size(33, 13);
             this.label_repeat.TabIndex = 22;
             this.label_repeat.Text = "send:";
             // 
+            // textBox_send_multiplikator
+            // 
+            this.textBox_send_multiplikator.Location = new System.Drawing.Point(61, 112);
+            this.textBox_send_multiplikator.Name = "textBox_send_multiplikator";
+            this.textBox_send_multiplikator.Size = new System.Drawing.Size(66, 20);
+            this.textBox_send_multiplikator.TabIndex = 21;
+            this.textBox_send_multiplikator.Text = "1";
+            // 
             // radioButton_send_ascii
             // 
             this.radioButton_send_ascii.AutoSize = true;
-            this.radioButton_send_ascii.Location = new System.Drawing.Point(164, 119);
+            this.radioButton_send_ascii.Location = new System.Drawing.Point(164, 36);
             this.radioButton_send_ascii.Name = "radioButton_send_ascii";
             this.radioButton_send_ascii.Size = new System.Drawing.Size(72, 17);
             this.radioButton_send_ascii.TabIndex = 14;
@@ -394,21 +404,13 @@
             // 
             this.radioButton_send_byte.AutoSize = true;
             this.radioButton_send_byte.Checked = true;
-            this.radioButton_send_byte.Location = new System.Drawing.Point(164, 99);
+            this.radioButton_send_byte.Location = new System.Drawing.Point(164, 16);
             this.radioButton_send_byte.Name = "radioButton_send_byte";
             this.radioButton_send_byte.Size = new System.Drawing.Size(97, 17);
             this.radioButton_send_byte.TabIndex = 13;
             this.radioButton_send_byte.TabStop = true;
             this.radioButton_send_byte.Text = "send byte array";
             this.radioButton_send_byte.UseVisualStyleBackColor = true;
-            // 
-            // textBox_send_multiplikator
-            // 
-            this.textBox_send_multiplikator.Location = new System.Drawing.Point(55, 207);
-            this.textBox_send_multiplikator.Name = "textBox_send_multiplikator";
-            this.textBox_send_multiplikator.Size = new System.Drawing.Size(71, 20);
-            this.textBox_send_multiplikator.TabIndex = 21;
-            this.textBox_send_multiplikator.Text = "1";
             // 
             // label1
             // 
@@ -467,21 +469,12 @@
             // menuStrip_main
             // 
             this.menuStrip_main.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.resetToolStripMenuItem,
-            this.logFileToolStripMenuItem,
-            this.serverToolStripMenuItem});
+            this.logFileToolStripMenuItem});
             this.menuStrip_main.Location = new System.Drawing.Point(0, 0);
             this.menuStrip_main.Name = "menuStrip_main";
             this.menuStrip_main.Size = new System.Drawing.Size(1237, 24);
             this.menuStrip_main.TabIndex = 25;
             this.menuStrip_main.Text = "menuStrip1";
-            // 
-            // resetToolStripMenuItem
-            // 
-            this.resetToolStripMenuItem.Name = "resetToolStripMenuItem";
-            this.resetToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
-            this.resetToolStripMenuItem.Text = "reset";
-            this.resetToolStripMenuItem.Click += new System.EventHandler(this.resetToolStripMenuItem_Click);
             // 
             // logFileToolStripMenuItem
             // 
@@ -489,29 +482,6 @@
             this.logFileToolStripMenuItem.Size = new System.Drawing.Size(55, 20);
             this.logFileToolStripMenuItem.Text = "log file";
             this.logFileToolStripMenuItem.Click += new System.EventHandler(this.logFileToolStripMenuItem_Click);
-            // 
-            // serverToolStripMenuItem
-            // 
-            this.serverToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.startToolStripMenuItem,
-            this.stopToolStripMenuItem});
-            this.serverToolStripMenuItem.Name = "serverToolStripMenuItem";
-            this.serverToolStripMenuItem.Size = new System.Drawing.Size(103, 20);
-            this.serverToolStripMenuItem.Text = "udp connection";
-            // 
-            // startToolStripMenuItem
-            // 
-            this.startToolStripMenuItem.Name = "startToolStripMenuItem";
-            this.startToolStripMenuItem.Size = new System.Drawing.Size(97, 22);
-            this.startToolStripMenuItem.Text = "start";
-            this.startToolStripMenuItem.Click += new System.EventHandler(this.startToolStripMenuItem_Click);
-            // 
-            // stopToolStripMenuItem
-            // 
-            this.stopToolStripMenuItem.Name = "stopToolStripMenuItem";
-            this.stopToolStripMenuItem.Size = new System.Drawing.Size(97, 22);
-            this.stopToolStripMenuItem.Text = "stop";
-            this.stopToolStripMenuItem.Click += new System.EventHandler(this.stopToolStripMenuItem_Click);
             // 
             // statusStrip1
             // 
@@ -529,7 +499,9 @@
             this.toolStripDropDownButton1.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.toolStripDropDownButton1.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.stopServerToolStripMenuItem,
-            this.startServerToolStripMenuItem});
+            this.startServerToolStripMenuItem,
+            this.toolStripSeparator1,
+            this.statusToolStripMenuItem});
             this.toolStripDropDownButton1.Image = ((System.Drawing.Image)(resources.GetObject("toolStripDropDownButton1.Image")));
             this.toolStripDropDownButton1.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.toolStripDropDownButton1.Name = "toolStripDropDownButton1";
@@ -539,28 +511,117 @@
             // stopServerToolStripMenuItem
             // 
             this.stopServerToolStripMenuItem.Name = "stopServerToolStripMenuItem";
-            this.stopServerToolStripMenuItem.Size = new System.Drawing.Size(131, 22);
+            this.stopServerToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.stopServerToolStripMenuItem.Text = "stop server";
             this.stopServerToolStripMenuItem.Click += new System.EventHandler(this.stopServerToolStripMenuItem_Click);
             // 
             // startServerToolStripMenuItem
             // 
             this.startServerToolStripMenuItem.Name = "startServerToolStripMenuItem";
-            this.startServerToolStripMenuItem.Size = new System.Drawing.Size(131, 22);
+            this.startServerToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.startServerToolStripMenuItem.Text = "start server";
             this.startServerToolStripMenuItem.Click += new System.EventHandler(this.startServerToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(149, 6);
+            // 
+            // statusToolStripMenuItem
+            // 
+            this.statusToolStripMenuItem.Name = "statusToolStripMenuItem";
+            this.statusToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.statusToolStripMenuItem.Text = "status";
+            this.statusToolStripMenuItem.Click += new System.EventHandler(this.statusToolStripMenuItem_Click);
             // 
             // tssl_server_status
             // 
             this.tssl_server_status.Name = "tssl_server_status";
             this.tssl_server_status.Size = new System.Drawing.Size(72, 17);
             this.tssl_server_status.Text = "server status";
+            this.tssl_server_status.ToolTipText = "ttt";
+            // 
+            // groupBox_settings
+            // 
+            this.groupBox_settings.Controls.Add(this.checkBox_SendOnlyIfConnected);
+            this.groupBox_settings.Controls.Add(this.checkBox_SendFramesCallback);
+            this.groupBox_settings.Controls.Add(this.textBox_WATCHDOG_WORK);
+            this.groupBox_settings.Controls.Add(this.label_WATCHDOG_WORK);
+            this.groupBox_settings.Controls.Add(this.textBox_MaxSYNCResendTrys);
+            this.groupBox_settings.Controls.Add(this.label_MaxSYNCResendTrys_desc);
+            this.groupBox_settings.Controls.Add(this.radioButton_send_ascii);
+            this.groupBox_settings.Controls.Add(this.radioButton_send_byte);
+            this.groupBox_settings.Controls.Add(this.checkBox_receive_big_endian);
+            this.groupBox_settings.Controls.Add(this.checkBox_send_big_endian);
+            this.groupBox_settings.Location = new System.Drawing.Point(12, 365);
+            this.groupBox_settings.Name = "groupBox_settings";
+            this.groupBox_settings.Size = new System.Drawing.Size(313, 157);
+            this.groupBox_settings.TabIndex = 26;
+            this.groupBox_settings.TabStop = false;
+            this.groupBox_settings.Text = "settings";
+            // 
+            // checkBox_SendOnlyIfConnected
+            // 
+            this.checkBox_SendOnlyIfConnected.AutoSize = true;
+            this.checkBox_SendOnlyIfConnected.Location = new System.Drawing.Point(141, 134);
+            this.checkBox_SendOnlyIfConnected.Name = "checkBox_SendOnlyIfConnected";
+            this.checkBox_SendOnlyIfConnected.Size = new System.Drawing.Size(130, 17);
+            this.checkBox_SendOnlyIfConnected.TabIndex = 20;
+            this.checkBox_SendOnlyIfConnected.Text = "SendOnlyIfConnected";
+            this.checkBox_SendOnlyIfConnected.UseVisualStyleBackColor = true;
+            this.checkBox_SendOnlyIfConnected.CheckedChanged += new System.EventHandler(this.checkBox_SendOnlyIfConnected_CheckedChanged);
+            // 
+            // checkBox_SendFramesCallback
+            // 
+            this.checkBox_SendFramesCallback.AutoSize = true;
+            this.checkBox_SendFramesCallback.Location = new System.Drawing.Point(9, 134);
+            this.checkBox_SendFramesCallback.Name = "checkBox_SendFramesCallback";
+            this.checkBox_SendFramesCallback.Size = new System.Drawing.Size(126, 17);
+            this.checkBox_SendFramesCallback.TabIndex = 19;
+            this.checkBox_SendFramesCallback.Text = "SendFramesCallback";
+            this.checkBox_SendFramesCallback.UseVisualStyleBackColor = true;
+            this.checkBox_SendFramesCallback.CheckedChanged += new System.EventHandler(this.checkBox_SendFramesCallback_CheckedChanged);
+            // 
+            // textBox_WATCHDOG_WORK
+            // 
+            this.textBox_WATCHDOG_WORK.Location = new System.Drawing.Point(126, 102);
+            this.textBox_WATCHDOG_WORK.Name = "textBox_WATCHDOG_WORK";
+            this.textBox_WATCHDOG_WORK.Size = new System.Drawing.Size(57, 20);
+            this.textBox_WATCHDOG_WORK.TabIndex = 18;
+            this.textBox_WATCHDOG_WORK.TextChanged += new System.EventHandler(this.textBox_WATCHDOG_WORK_TextChanged);
+            // 
+            // label_WATCHDOG_WORK
+            // 
+            this.label_WATCHDOG_WORK.AutoSize = true;
+            this.label_WATCHDOG_WORK.Location = new System.Drawing.Point(6, 105);
+            this.label_WATCHDOG_WORK.Name = "label_WATCHDOG_WORK";
+            this.label_WATCHDOG_WORK.Size = new System.Drawing.Size(114, 13);
+            this.label_WATCHDOG_WORK.TabIndex = 17;
+            this.label_WATCHDOG_WORK.Text = "WATCHDOG_WORK:";
+            // 
+            // textBox_MaxSYNCResendTrys
+            // 
+            this.textBox_MaxSYNCResendTrys.Location = new System.Drawing.Point(128, 67);
+            this.textBox_MaxSYNCResendTrys.Name = "textBox_MaxSYNCResendTrys";
+            this.textBox_MaxSYNCResendTrys.Size = new System.Drawing.Size(55, 20);
+            this.textBox_MaxSYNCResendTrys.TabIndex = 16;
+            this.textBox_MaxSYNCResendTrys.TextChanged += new System.EventHandler(this.textBox_MaxSYNCResendTrys_TextChanged);
+            // 
+            // label_MaxSYNCResendTrys_desc
+            // 
+            this.label_MaxSYNCResendTrys_desc.AutoSize = true;
+            this.label_MaxSYNCResendTrys_desc.Location = new System.Drawing.Point(6, 70);
+            this.label_MaxSYNCResendTrys_desc.Name = "label_MaxSYNCResendTrys_desc";
+            this.label_MaxSYNCResendTrys_desc.Size = new System.Drawing.Size(116, 13);
+            this.label_MaxSYNCResendTrys_desc.TabIndex = 15;
+            this.label_MaxSYNCResendTrys_desc.Text = "MaxSYNCResendTrys:";
             // 
             // FrmMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1237, 573);
+            this.Controls.Add(this.groupBox_settings);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.groupBox_status);
             this.Controls.Add(this.label1);
@@ -581,6 +642,8 @@
             this.menuStrip_main.PerformLayout();
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
+            this.groupBox_settings.ResumeLayout(false);
+            this.groupBox_settings.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -622,21 +685,26 @@
         private System.Windows.Forms.Label label_send_times;
         private System.Windows.Forms.GroupBox groupBox_status;
         private System.Windows.Forms.MenuStrip menuStrip_main;
-        private System.Windows.Forms.ToolStripMenuItem resetToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem logFileToolStripMenuItem;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.TextBox textBox_msg_payload_int;
         private System.Windows.Forms.ListBox listBox_frameLog;
         private System.Windows.Forms.Label label_frameLog;
         private System.Windows.Forms.Label label_frameMetadata;
-        private System.Windows.Forms.ToolStripMenuItem serverToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem startToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem stopToolStripMenuItem;
         private System.Windows.Forms.StatusStrip statusStrip1;
         private System.Windows.Forms.ToolStripDropDownButton toolStripDropDownButton1;
         private System.Windows.Forms.ToolStripMenuItem stopServerToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem startServerToolStripMenuItem;
         private System.Windows.Forms.ToolStripStatusLabel tssl_server_status;
+        private System.Windows.Forms.GroupBox groupBox_settings;
+        private System.Windows.Forms.Label label_WATCHDOG_WORK;
+        private System.Windows.Forms.TextBox textBox_MaxSYNCResendTrys;
+        private System.Windows.Forms.Label label_MaxSYNCResendTrys_desc;
+        private System.Windows.Forms.TextBox textBox_WATCHDOG_WORK;
+        private System.Windows.Forms.CheckBox checkBox_SendOnlyIfConnected;
+        private System.Windows.Forms.CheckBox checkBox_SendFramesCallback;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripMenuItem statusToolStripMenuItem;
     }
 }
 

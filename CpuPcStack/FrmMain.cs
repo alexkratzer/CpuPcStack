@@ -17,8 +17,6 @@ namespace CpuPcStack
         
         public FrmMain()
         {
-            //cpsLIB.log.clear();
-            log.msg(this, " ### START ###");
             cpsCMD = new cpsLIB.cmd(this);
             InitializeComponent();
 
@@ -35,6 +33,11 @@ namespace CpuPcStack
             TimerUpdateGui.Start();
 
             listBox_frameLog.DataSource = ListFrames;
+
+            textBox_MaxSYNCResendTrys.Text = cpsCMD.MaxSYNCResendTrys.ToString();
+            textBox_WATCHDOG_WORK.Text = cpsCMD.WATCHDOG_WORK.ToString();
+            checkBox_SendFramesCallback.Checked = cpsCMD.SendFramesCallback;
+            checkBox_SendOnlyIfConnected.Checked = cpsCMD.SendOnlyIfConnected;
         }
 
         private void FrmMain_FormClosing(object sender, FormClosingEventArgs e)
@@ -43,25 +46,12 @@ namespace CpuPcStack
         }
 
         #region menue
-        private void resetToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            //listBox_frameLog.Items.Clear();
-            cpsCMD.reset();
-        }
         private void logFileToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            string tmp = cpsLIB.log.FilePath();
-            if(System.IO.File.Exists(tmp))
-                System.Diagnostics.Process.Start(tmp);
-        }
-        private void startToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            cpsCMD.serverSTART(textBox_srv_port.Text);   
-        }
-
-        private void stopToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            cpsCMD.serverSTOP();
+            MessageBox.Show("logging not active. see class log.cs");
+            //string tmp = cpsLIB.log.FilePath();
+            //if(System.IO.File.Exists(tmp))
+            //    System.Diagnostics.Process.Start(tmp);
         }
 
         private void startServerToolStripMenuItem_Click(object sender, EventArgs e)
@@ -74,6 +64,11 @@ namespace CpuPcStack
             cpsCMD.serverSTOP();
         }
 
+        private void statusToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            MessageBox.Show(ListServerStatus, "server status");
+        }
+
 
         #endregion
 
@@ -84,7 +79,7 @@ namespace CpuPcStack
         }
         private void button_check_Click(object sender, EventArgs e)
         {
-            cpsCMD.check_connection(textBox_remote_ip.Text, textBox_remotePort.Text);
+            cpsCMD.ConnectionCheck(textBox_remote_ip.Text, textBox_remotePort.Text);
         }
         private void button_send_repeat_Click(object sender, EventArgs e)
         {
@@ -203,9 +198,13 @@ namespace CpuPcStack
                 MessageBox.Show("srv_msgCallback: " + e.Message, "writing to GUI failed");
             }
         }
+
+        string ListServerStatus;
         private void srv_msg_funkt(string s)
         {
+            //TODO: in liste abspeichern... oder liste in cmd verwalten
             tssl_server_status.Text = s;
+            ListServerStatus += s + Environment.NewLine;
         }
         #endregion
 
@@ -318,14 +317,14 @@ namespace CpuPcStack
         private void TimerUpdateGui_Tick(object sender, EventArgs e)
         {
             label1.Text =
-    "state: " + cpsCMD.state.ToString() + Environment.NewLine +
+    //"state: " + cpsCMD.state.ToString() + Environment.NewLine +
     "InWorkFrameCount: " + cpsCMD.InWorkFrameCount() + Environment.NewLine +
     "TotalFramesSend: " + Frame.CountSendFrames + Environment.NewLine +
     "TotalFramesReceive" + Frame.CountRcvFrames + Environment.NewLine +
     "TotalFramesFinished: " + cpsCMD.TotalFramesFinished.ToString() + Environment.NewLine +
-    "check_trys: " + cpsCMD.check_trys.ToString() + Environment.NewLine +
+    //"check_trys: " + cpsCMD.check_trys.ToString() + Environment.NewLine +
     "";//"fstackLogCount: " + cpsCMD.fstackLogCount().ToString() + Environment.NewLine;
-
+            
         }
 
         private void TimerStop() {
@@ -337,6 +336,7 @@ namespace CpuPcStack
 
         #endregion
 
+        #region gui settings
         private void listBox_frameLog_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (listBox_frameLog.SelectedItem != null)
@@ -352,14 +352,30 @@ namespace CpuPcStack
             }
         }
 
+        private void textBox_MaxSYNCResendTrys_TextChanged(object sender, EventArgs e)
+        {
+            cpsCMD.MaxSYNCResendTrys = Convert.ToInt16(textBox_MaxSYNCResendTrys.Text);
+        }
+
+        private void textBox_WATCHDOG_WORK_TextChanged(object sender, EventArgs e)
+        {
+            cpsCMD.WATCHDOG_WORK = Convert.ToInt16(textBox_WATCHDOG_WORK.Text);
+        }
+
+        private void checkBox_SendFramesCallback_CheckedChanged(object sender, EventArgs e)
+        {
+            cpsCMD.SendFramesCallback = checkBox_SendFramesCallback.Checked;
+        }
+
+        private void checkBox_SendOnlyIfConnected_CheckedChanged(object sender, EventArgs e)
+        {
+            cpsCMD.SendOnlyIfConnected = checkBox_SendOnlyIfConnected.Checked;
+        }
+        #endregion
 
 
 
 
 
-
-
-
- 
     }
 }

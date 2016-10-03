@@ -13,8 +13,14 @@ namespace cpsLIB
     /// <summary>
     /// Telegram;
     /// 4*Char [type]; 1*Int16 [index]; x*byte [payload]
-    /// 
     /// type => art des frames. z.b. SYNC zum verifizieren einer verbindung
+    /// 
+    /// ## sende acknowlege auf anfrage
+    /// ## SYN -> verbindungsüberwachung
+    /// ## containering -> udp frame besteht nicht aus einer sondern x nachrichten. 
+    /// 
+    /// diese müssen auf der client seite eingepackt und auf der server seite ausgepackt werden
+    
     /// </summary>
     public class FrameRawData
     {
@@ -23,7 +29,7 @@ namespace cpsLIB
         /// frame content
         /// </summary>
         public string _type;//TODO nicht string sondern enum FrameType verwenden
-        public Int16 _index;
+        public Int16 _sequenzeNumber; //laufnummer des telegramms
         private Int16[] _FramePayload; //frame data as INT without type/index
         private byte[] _FramePayloadByte;
         private int _FrameLength;
@@ -70,6 +76,7 @@ namespace cpsLIB
 
         public static bool SendBigEndian = false; //PC = Little-Endian, CPU = Big-Endian
         public static bool ReceiveBigEndian = false;
+
         #endregion
 
         #region frames_payload NOT_USED
@@ -118,7 +125,7 @@ namespace cpsLIB
                     ChangeState(FrameWorkingState.error, "structural defect @rcv Frame -> _FrameData.Length >= TYPE_LENGTH");
 
                 if (_FrameData.Length >= TYPE_LENGTH + INDEX_LENGTH)
-                    _index = BitConverter.ToInt16(_FrameData.Skip<byte>(TYPE_LENGTH).Take<byte>(INDEX_LENGTH).ToArray(), 0);
+                    _sequenzeNumber = BitConverter.ToInt16(_FrameData.Skip<byte>(TYPE_LENGTH).Take<byte>(INDEX_LENGTH).ToArray(), 0);
                 else
                     ChangeState(FrameWorkingState.error, "structural defect @rcv Frame -> _FrameData.Length >= TYPE_LENGTH + INDEX_LENGTH");
             }
@@ -147,7 +154,7 @@ namespace cpsLIB
             
             RemoteIp = ip;
             _type = type; //zwischenspeichern bisher nicht notwendig
-            _index = index; //zwischenspeichern bisher nicht notwendig        
+            _sequenzeNumber = index; //zwischenspeichern bisher nicht notwendig        
 
             if (int.TryParse(port, out RemotePort))
             {
@@ -271,7 +278,8 @@ namespace cpsLIB
         }
 
         public string GetMetaInfo() {
-            return TimeCreated.ToString("HH:mm:ss:fff") + " (" + frameState.ToString() + "/" + frameSender.ToString() + "/" + index_SendRcv.ToString() + ") [" + RemoteIp + ":" + RemotePort + " " + _type + " (" + _index + ")] ";
+            return TimeCreated.ToString("HH:mm:ss:fff") + " (" + frameState.ToString() + "/" + frameSender.ToString() + "/" + index_SendRcv.ToString() +
+                ") [" + RemoteIp + ":" + RemotePort + " " + _type + " (" + _sequenzeNumber + ")] ";
         }
         #endregion
 
@@ -314,23 +322,15 @@ namespace cpsLIB
                             return true;
                         }
                         else
-                        {
-                            log.msg(this, "length payload <>");
                             return false;
-                        }
                     }
                     else if (f._FramePayloadByte == null)//Beide Frames haben kein Payload
                         return true;
                     else
-                    {
-                        log.msg(this, "payload == null, f.payload != null");
                         return false;
-                    }
                 }
-                log.msg(this, "unterschiedlicher type (" + _type + ")");
                 return false;
             }
-            log.msg(this, "unterschiedliche IP ("+ RemoteIp + ")");
             return false;
         }
 
@@ -458,7 +458,7 @@ namespace cpsLIB
 
    
     public class  Frame : FrameRawData{
-        public FrameRcv frameRcv;
+        //public FrameRcv frameRcv;
         /// <summary>
         /// sync frame ohne content
         /// </summary>

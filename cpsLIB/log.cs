@@ -6,7 +6,8 @@ using System.IO;
 
 namespace cpsLIB
 {
-    public class log
+    public class log_NOT_USED
+
     {
         private const string path = "log.txt";
         public static void msg(Object o, String msg)

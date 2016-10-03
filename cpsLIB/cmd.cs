@@ -9,36 +9,32 @@ namespace cpsLIB
 {
     //TODO: für jede neue client anfrage eine liste mit status der verbindung verwalten.
     //als key für den datensatz die Remote IP verwenden
-
+    
     public enum udp_state { unknown, connected, disconnected, error }
     //public enum msg_type { undef, info, warning, error }
     public class cmd
     {
-        private const Int16 MaxSYNCResendTrys = 3; //Anzahl der erlaubten Wiederholungen bei SYNC Telegram
-        private const Int16 WATCHDOG_WORK = 2000; //Erlaubte Zeitdauer in ms bis PLC geantwortet haben muss
-        private const bool SendFramesCallback = true; //es werden die "zu sendenden frames" als callback zurückgeliefert
+        public Int16 MaxSYNCResendTrys = 3; //Anzahl der erlaubten Wiederholungen bei SYNC Telegram
+        public Int16 WATCHDOG_WORK = 2000; //Erlaubte Zeitdauer in ms bis PLC geantwortet haben muss
+        public bool SendFramesCallback = true; //es werden die "zu sendenden frames" als callback zurückgeliefert
+        public bool SendOnlyIfConnected = false;
 
         public static IcpsLIB _FrmMain;
         private udp_server _udp_server;
         private udp_client _udp_client;
         System.Collections.Concurrent.ConcurrentQueue<Frame> _fstack = null;
-        
+
+        private List<connectStatus> ListConnectStatus = new List<connectStatus>();
+
         //TODO: alle frames in liste speichern
         //System.Collections.Concurrent.ConcurrentQueue<Frame> _fstackLog = null;
 
-        /// <summary>
-        /// status schnittstelle
-        /// </summary>
-        public udp_state state;
-        //public int TotalFramesSend = 0;
-        //public int TotalFramesReceive = 0;
         public int TotalFramesFinished = 0; //Frames die auf eine anfrage hin empfangen wurden und verarbeitet werden können
-        public Int16 check_trys;
-       
+ 
         //Constructor
-        public cmd(IcpsLIB FrmMain) {
+        public cmd(IcpsLIB FrmMain)
+        {
             _FrmMain = FrmMain;
-            state = udp_state.unknown;
             _udp_client = new udp_client();
             _fstack = new System.Collections.Concurrent.ConcurrentQueue<Frame>();
             //_fstackLog = new System.Collections.Concurrent.ConcurrentQueue<Frame>();
@@ -48,43 +44,100 @@ namespace cpsLIB
         #region client
         public void send(Frame f)
         {
-            if (putFrameToStack(f))
+            if (ConnectVerifyState(f, udp_state.connected) || FrameType.SYNC.ToString().Equals(f._type))
             {
-                _udp_client.send(f);
-                f.ChangeState(FrameWorkingState.send, "msg from UDPclient to app");
-                
-                //der App wird mitgeteilt das dieses frame verschickt wurde
-                if (SendFramesCallback)
-                    _FrmMain.interprete_frame(f);
+                if (putFrameToStack(f))
+                {
+                    _udp_client.send(f);
+                    f.ChangeState(FrameWorkingState.send, "msg from UDPclient to app");
+                }
             }
+            else
+                f.ChangeState(FrameWorkingState.error, "Remote udp_state NOT connected - NO Frame is send");
+
+            //der App wird mitgeteilt das dieses frame verschickt wurde
+            if (SendFramesCallback)
+                _FrmMain.interprete_frame(f);
+        }
+
+        public void ConnectionCheck(string ip, string port)
+        {
+            foreach (connectStatus cs in ListConnectStatus)
+            {
+                if (cs.ip.Equals(ip) && cs.sport == port)
+                {
+                    Frame f = new Frame(ip, port.ToString(), FrameType.SYNC.ToString(), cs.check_trys);
+                    send(f);
+                    cs.check_trys++;
+                    cs.state = udp_state.unknown;
+                    return;
+                }
+            }
+            //wenn keine connection gefunden wurde wird eine neue angelegt
+            ListConnectStatus.Add(new connectStatus(ip, port));
+            ConnectionCheck(ip, port);
+
+        }
+
+        private bool ConnectVerifyState(Frame f, udp_state matchState)
+        {
+            if (SendOnlyIfConnected)
+            {
+                if (ListConnectStatus.Count > 0)
+                {
+                    foreach (connectStatus cs in ListConnectStatus)
+                    {
+                        if (cs.ip.Equals(f.RemoteIp) && cs.iport == f.RemotePort)
+                        {
+                            f.ChangeState(FrameWorkingState.inWork, "ConnectVerifyState (Soll: " + matchState + " / IST: " +cs.state + ")" );
+                            if (cs.state == matchState)
+                                return true;
+                            else
+                                return false;
+                        }
+                    }
+                    return false;
+                }
+                else
+                {
+                    f.ChangeState(FrameWorkingState.error, "ConnectVerifyState with no connections in ListConnectStatus");
+                    return false;
+                }
+            }
+            return true;
         }
         #endregion
 
         #region server
-        public void serverSTART(string port) {
+        public void serverSTART(string port)
+        {
             _udp_server = new udp_server(this, port);
         }
-        public void serverSTOP() {
+        public void serverSTOP()
+        {
             if (_udp_server != null)
                 _udp_server.stop();
         }
 
-        public void server_message(string msg) {
+        public void server_message(string msg)
+        {
             _FrmMain.logMsg(msg);
         }
 
         public void receive(FrameRcv f)
         {
             //TODO: handle different IP requests in list
-            state = udp_state.connected;
+            
+            ConnectStateChange(f, udp_state.connected);
 
             //received frame will be passed to the main application
             _FrmMain.interprete_frame(f);
 
             //remove frame from "InWork Jobs" 
-            if (!_fstack.IsEmpty){
+            if (!_fstack.IsEmpty)
+            {
                 foreach (Frame frameStack in _fstack)
-                    if (frameStack._index == f._index)
+                    if (frameStack._sequenzeNumber == f._sequenzeNumber)
                     {
                         //+++++++++++++++++ matching rcv frame to frame in stack +++++++++++++++++++
                         if (takeFrameFromStack(frameStack))
@@ -97,29 +150,25 @@ namespace cpsLIB
 
                         return;
                     }
-                }
+            }
             f.ChangeState(FrameWorkingState.error, "received udp frame without request...");
             _FrmMain.logMsg("received udp frame without request...");
         }
-        #endregion
-
-        public void reset()
+        private void ConnectStateChange(FrameRcv f, udp_state state)
         {
-            state = udp_state.unknown;
-            TotalFramesFinished = 0;
-            check_trys = 0;
+            foreach (connectStatus cs in ListConnectStatus)
+                if (cs.ip.Equals(f.RemoteIp)) //Sende und Remote Port sind unterschiedlich -> cs.iport == f.RemotePort
+                {
+                    cs.state = state;
+                    return;
+                }
+            //wenn keine connection zu dem frame gefunden wurde wird fehler gemeldet
+            f.ChangeState(FrameWorkingState.warning, "no connection found to frame with IP: " + f.RemoteIp);
         }
 
-        #region check connection
-        public void check_connection(string ip, string port){
-            Frame f = new Frame(ip, port, FrameType.SYNC.ToString(), check_trys);
-            send(f);
-            check_trys++;
-            state = udp_state.disconnected;
-        }
         #endregion
 
-        #region handle frame stack       
+        #region handle frame stack
         /// <summary>
         /// frame aus stack löschen
         /// </summary>
@@ -128,13 +177,13 @@ namespace cpsLIB
         {
             if (_fstack.TryDequeue(out f))
             {
-                f.ChangeState(FrameWorkingState.finish, "Dequeue frame from stack");        
+                f.ChangeState(FrameWorkingState.finish, "Dequeue frame from stack");
                 return true;
             }
 
             f.ChangeState(FrameWorkingState.error, "ERROR dequeue Frame from stack... ");
             return false;
-            
+
         }
 
         /// <summary>
@@ -146,7 +195,7 @@ namespace cpsLIB
         /// <param name="f"></param>
         private bool putFrameToStack(Frame f)
         {
-            if(!_fstack.IsEmpty)
+            if (!_fstack.IsEmpty)
                 foreach (Frame frame in _fstack)
                 {
                     if (frame.isEqualExeptIndex(f))
@@ -202,7 +251,8 @@ namespace cpsLIB
                 {
                     foreach (Frame f in _fstack)
                     {
-                        if (f.LastSendDateTime.AddMilliseconds(WATCHDOG_WORK) < DateTime.Now) {
+                        if (f.LastSendDateTime.AddMilliseconds(WATCHDOG_WORK) < DateTime.Now)
+                        {
                             //hit Watchdog
                             if (f._type.Equals(FrameType.SYNC.ToString()))
                             {
@@ -231,6 +281,21 @@ namespace cpsLIB
             }
         }
         #endregion
-        
+
+        class connectStatus
+        {
+            public Int16 check_trys = 0;
+            public string ip="";
+            public int iport;
+            public string sport;
+            public udp_state state;
+            public connectStatus(string ip, string port) { 
+                this.ip = ip;
+                sport = port;
+                int.TryParse(port, out iport);
+                
+                state = udp_state.unknown;
+            }
+        }
     }
 }

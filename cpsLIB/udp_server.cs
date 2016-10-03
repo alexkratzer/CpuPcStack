@@ -10,13 +10,13 @@ namespace cpsLIB
 {
     class udp_server
     {
-        net_udp _sender;
+        cmd _sender;
         Thread _srvThread;
         UdpClient listener = null;
         int _srvPort;
         private volatile bool listening;
 
-        public udp_server(net_udp FrmMain, string port)
+        public udp_server(cmd FrmMain, string port)
         {
             this.listening = false;
             _sender = FrmMain;
@@ -40,7 +40,8 @@ namespace cpsLIB
         public void stop()
         {
             this.listening = false;
-            listener.Close();   
+            if(listener!=null)
+                listener.Close();   
         }
 
         public void receive()
@@ -71,8 +72,9 @@ namespace cpsLIB
                             _sender.server_message(groupEP.Address.ToString() + ":" + groupEP.Port.ToString() + 
                                 "udp_server receive ########### EMPTY MESSAGE ################# ");
 
-                        Frame f = new Frame(bytes, groupEP.Address.ToString(), groupEP.Port.ToString());
-                        f.ChangeState(FrameWorkingState.received, "udp server received new frame");
+                        FrameRcv f = new FrameRcv(groupEP.Address.ToString(), groupEP.Port.ToString(), bytes );
+                        //im konstruktor für empfangs frames gibt es keine Log Liste
+                        //f.ChangeState(FrameWorkingState.received, "udp server received new frame");
                         _sender.receive(f);
                     }
                 }

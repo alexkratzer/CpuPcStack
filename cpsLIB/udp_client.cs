@@ -32,7 +32,6 @@ namespace cpsLIB
             UdpClient udpClient = new UdpClient();
             try
             {
-                f.LastSendDateTime = DateTime.Now;
                 f.ChangeState(FrameWorkingState.send, "send udp frame @: " + f.RemoteIp + ":" +  f.RemotePort);
                 udpClient.Send(f.bytes(), f.length(), f.RemoteIp, f.RemotePort);
                 udpClient.Close();

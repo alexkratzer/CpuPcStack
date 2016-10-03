@@ -8,20 +8,28 @@ namespace cpsLIB
 {
     public enum FrameType { DEMO, SYNC}
     public enum FrameSender { client, server, unknown }
+    public enum FrameState { ERROR, IS_OK}
     public enum FrameWorkingState { created, inWork, finish, error, warning, received, send}
     /// <summary>
     /// Telegram;
     /// 4*Char [type]; 1*Int16 [index]; x*byte [payload]
-    /// 
     /// type => art des frames. z.b. SYNC zum verifizieren einer verbindung
+    /// 
+    /// ## sende acknowlege auf anfrage
+    /// ## SYN -> verbindungsüberwachung
+    /// ## containering -> udp frame besteht nicht aus einer sondern x nachrichten. 
+    /// 
+    /// diese müssen auf der client seite eingepackt und auf der server seite ausgepackt werden
+    
     /// </summary>
     public class FrameRawData
     {
+        #region vars content
         /// <summary>
         /// frame content
         /// </summary>
-        public string _type;
-        public Int16 _index;
+        public string _type;//TODO nicht string sondern enum FrameType verwenden
+        public Int16 _sequenzeNumber; //laufnummer des telegramms
         private Int16[] _FramePayload; //frame data as INT without type/index
         private byte[] _FramePayloadByte;
         private int _FrameLength;
@@ -37,7 +45,9 @@ namespace cpsLIB
                 _FrameLength = FrameData.Length;
             }
         }
-
+        #endregion
+        
+        #region vars management
         /// <summary>
         /// frame content description
         /// </summary>
@@ -50,47 +60,54 @@ namespace cpsLIB
         public string RemoteIp = null;
         public int RemotePort;
         public DateTime TimeCreated; //Zeitstempel an dem das Frame erzeugt wurde
-        private FrameWorkingState WorkingState;
-        private string WorkingStateMessage; //Log Messages zu dem Frame
-        public DateTime LastSendDateTime; //Zeitstempel an dem das Frame zuletzt versendet wurde
-        public int SendTrys = 0;
-        public int index_send = 0;
-        public FrameSender frameSender = FrameSender.unknown;
 
-        public static bool SendBigEndian = false; //PC = Little-Endian, CPU = Big-Endian
-        public static bool ReceiveBigEndian = false;
+        public int index_SendRcv = 0;
+        public FrameSender frameSender = FrameSender.unknown;
+        private List<frameLog> ListFrameLog;
+        public FrameState frameState = FrameState.IS_OK;
+        public int SendTrys; //Wird bei FrameType.SYNC Frames verwendet. Anzahl der wiederholungen bei keiner antwort
+        public DateTime LastSendDateTime;
 
         /// <summary>
         /// static meta data
         /// </summary>
         public static int CountSendFrames = 0;
         public static int CountRcvFrames = 0;
-              
+
+        public static bool SendBigEndian = false; //PC = Little-Endian, CPU = Big-Endian
+        public static bool ReceiveBigEndian = false;
+
+        #endregion
+
         #region frames_payload NOT_USED
         public static Int16[] GET_STATE(int index) { return new Int16[] { Convert.ToInt16(index), 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; }
         public static Int16[] GET_PARAM(int index) { return new Int16[] { Convert.ToInt16(index), 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; }
         public static Int16[] SET_STATE(int index, string position, string angle) { return new Int16[] { Convert.ToInt16(index), 2, Convert.ToInt16(position), Convert.ToInt16(angle), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; }
         public static Int16[] SET_STATE(int index, bool state_switch) { return new Int16[] { Convert.ToInt16(index), 2, Convert.ToInt16(state_switch), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; }
         public static Frame FRAME_SYNC(Int16 index, string ip, string port) {
-            return new Frame(FrameType.SYNC.ToString(), index, ip, port);
+            return new Frame(ip, port, FrameType.SYNC.ToString(), index);
             /*
              Frame f = new Frame(FrameType.SYNC.ToString(), check_trys, textBox_remote_ip.Text, textBox_remotePort.Text);
              */ 
         }
         #endregion
 
+
         #region construktor
         /// <summary>
-        /// make new frame object from rcv UDP Frame
+        /// ++ rcv Frame from Remote++
+        /// make new frame object from received UDP Frame
         /// </summary>
         /// <param name="data">actual message</param>
         /// <param name="ip">ip from remote sender</param>
         /// <param name="port">port from remote sender</param>
-        public FrameRawData(byte[] data, string ip, string port)
+        public FrameRawData(string ip, string port, byte[] data)
         {
             CountRcvFrames++;
+            index_SendRcv = CountRcvFrames;
             TimeCreated = DateTime.Now;
             frameSender = FrameSender.server;
+            ListFrameLog = new List<frameLog>();
 
             ChangeState(FrameWorkingState.created, "make new frame object from rcv UDP Frame");
             
@@ -108,7 +125,7 @@ namespace cpsLIB
                     ChangeState(FrameWorkingState.error, "structural defect @rcv Frame -> _FrameData.Length >= TYPE_LENGTH");
 
                 if (_FrameData.Length >= TYPE_LENGTH + INDEX_LENGTH)
-                    _index = BitConverter.ToInt16(_FrameData.Skip<byte>(TYPE_LENGTH).Take<byte>(INDEX_LENGTH).ToArray(), 0);
+                    _sequenzeNumber = BitConverter.ToInt16(_FrameData.Skip<byte>(TYPE_LENGTH).Take<byte>(INDEX_LENGTH).ToArray(), 0);
                 else
                     ChangeState(FrameWorkingState.error, "structural defect @rcv Frame -> _FrameData.Length >= TYPE_LENGTH + INDEX_LENGTH");
             }
@@ -117,23 +134,27 @@ namespace cpsLIB
         }
 
 
+
+        
         /// <summary>
+        /// /// ++ send Frame to Remote ++
         /// make new frame object to send it later on 
         /// </summary>
         /// <param name="type"></param>
         /// <param name="index"></param>
         /// <param name="data"></param>
-        public FrameRawData(string type, Int16 index, byte[] bdata, string ip, string port)
+        public FrameRawData(string ip, string port, string type, Int16 index, byte[] bdata)
         {
             CountSendFrames++;
-            index_send = CountSendFrames;
+            index_SendRcv = CountSendFrames;
             TimeCreated = DateTime.Now;
+            LastSendDateTime = DateTime.Now;
             frameSender = FrameSender.client;
+            ListFrameLog = new List<frameLog>();
             
             RemoteIp = ip;
             _type = type; //zwischenspeichern bisher nicht notwendig
-            _index = index; //zwischenspeichern bisher nicht notwendig        
-            
+            _sequenzeNumber = index; //zwischenspeichern bisher nicht notwendig        
 
             if (int.TryParse(port, out RemotePort))
             {
@@ -156,7 +177,7 @@ namespace cpsLIB
         }
         #endregion
 
-        #region functions
+        #region ################## functions ##########################
         private byte[] changeEndian(byte[] data)
         {
             byte[] newData = new byte[data.Length];
@@ -176,14 +197,6 @@ namespace cpsLIB
         //    return tmp_data;
         //}
 
-        private Int16[] GetIntArr(byte[] data)
-        {
-            Int16[] intData = new Int16[data.Length / 2];
-            for (int i = 0; i < data.Length / 2; i++)
-                intData[i] = BitConverter.ToInt16(data, i * 2);
-            return intData;
-        }
-
         public byte[] bytes()
         {
             return _FrameData;
@@ -193,6 +206,18 @@ namespace cpsLIB
         {
             return _FrameData.Length;
         }
+
+        #region getter payload
+
+        private Int16[] GetIntArr(byte[] data)
+        {
+            Int16[] intData = new Int16[data.Length / 2];
+            for (int i = 0; i < data.Length / 2; i++)
+                intData[i] = BitConverter.ToInt16(data, i * 2);
+            return intData;
+        }
+        
+
 
         public string getPayloadByte() {
             string s = string.Empty;
@@ -210,36 +235,55 @@ namespace cpsLIB
                 s += _FramePayload[i].ToString() + ", ";
             return s;
         }
-
         public string getPayloadASCII()
         {
             return new string(Encoding.ASCII.GetString(_FramePayloadByte).ToCharArray());
         }
+        /*
+         * convert data to string
+         * 
+         * 
+        if (_FrameData != null)
+        {
+            string s = string.Empty;
+            Int16[] data = GetIntArr(_FrameData);
+            for (int i = 0; i < data.Length; i++)
+                s += data[i].ToString() + ", ";
 
+            s += " byte: ";
+            for (int i = 0; i < _FrameData.Length; i++)
+                s += _FrameData[i].ToString() + ", ";
+
+            return s;
+        }
+        else
+            return "_FrameData==NULL";
+         * */
+
+
+        #endregion
+        
+        #region getter
         public override string ToString()
         {
-            if (_FrameData != null)
-            {
-                string s = string.Empty;
-                Int16[] data = GetIntArr(_FrameData);
-                for (int i = 0; i < data.Length; i++)
-                    s += data[i].ToString() + ", ";
-
-                s += " byte: ";
-                for (int i = 0; i < _FrameData.Length; i++)
-                    s += _FrameData[i].ToString() + ", ";
-
-                return s;
-            }
-            else
-                return "_FrameData==NULL";
+            return GetMetaInfo();
         }
 
-        public string GetDetailedString() {
-            return DateTime.Now.ToString("HH:mm:ss:fff") + " (" + index_send.ToString() + ") [" + RemoteIp + ":" + RemotePort + " " + /*TimeCreated.ToString("HH:mm:ss:fff") +*/ " " + _type + " (" + _index + ")] " +
-                " (" + WorkingState.ToString() + ") " + WorkingStateMessage + " {" + this.ToString() + "}";
+        public string GetLog()
+        {
+            string s = "";
+            foreach (frameLog fl in ListFrameLog)
+                s += fl.ToString() + Environment.NewLine;
+            return s;
         }
 
+        public string GetMetaInfo() {
+            return TimeCreated.ToString("HH:mm:ss:fff") + " (" + frameState.ToString() + "/" + frameSender.ToString() + "/" + index_SendRcv.ToString() +
+                ") [" + RemoteIp + ":" + RemotePort + " " + _type + " (" + _sequenzeNumber + ")] ";
+        }
+        #endregion
+
+        #region helper
         /// <summary>
         /// vergleicht die rohdaten zweier frames
         /// </summary>
@@ -260,8 +304,10 @@ namespace cpsLIB
         /// <returns>bei gleich TRUE; bei unterschiedlich FALSE</returns>
         public bool isEqualExeptIndex(Frame f)
         {
-            log.msg(this, "isEqualExeptIndex: " + f.GetDetailedString());
-            //if (f.RemoteIp.Equals(RemoteIp) && f._type.Equals(_type))//Beide Frames haben gleichen Type und gleiche Remote IP Adresse
+            //TODO wird nicht oft durchlaufen, evtl nur bei hoher last
+            //log.msg(this, "isEqualExeptIndex: " + f.GetMetaInfo());
+            
+            //Beide Frames haben gleichen Type und gleiche Remote IP Adresse
             if (f.RemoteIp.Equals(RemoteIp))
             {
                 if (f._type.Equals(_type))
@@ -276,23 +322,15 @@ namespace cpsLIB
                             return true;
                         }
                         else
-                        {
-                            log.msg(this, "length payload <>");
                             return false;
-                        }
                     }
                     else if (f._FramePayloadByte == null)//Beide Frames haben kein Payload
                         return true;
                     else
-                    {
-                        log.msg(this, "payload == null, f.payload != null");
                         return false;
-                    }
                 }
-                log.msg(this, "unterschiedlicher type (" + _type + ")");
                 return false;
             }
-            log.msg(this, "unterschiedliche IP ("+ RemoteIp + ")");
             return false;
         }
 
@@ -305,20 +343,18 @@ namespace cpsLIB
         /// <returns></returns>
         public FrameRawData ChangeState(FrameWorkingState ws, string msg)
         {
-            WorkingState = ws;
-            WorkingStateMessage = msg;
-
-            //schreibe in log datei
             //log.msg(this, GetDetailedString());
-
-            net_udp.err_notify(this);
-            //TODO: schreibe in GUI
-            //oder besser in eine liste des frames mit - id, timestamp, WorkingState, WorkingStateMessage 
+            if (ws.Equals(FrameWorkingState.error))
+                frameState = FrameState.ERROR;
+            
+            ListFrameLog.Add(new frameLog(ws, msg));
             return this;
         }
         #endregion
 
-        #region funktions unused
+        
+
+        #region unused
         /// <summary>
         /// returns Frame als ByteArray in BigEndian (PLC Order)
         /// </summary>
@@ -384,31 +420,61 @@ namespace cpsLIB
         }
          * */
         #endregion
+
+        #endregion
+
+
     }
 
-   
-    public class  Frame : FrameRawData{
-     
-        /// <summary>
-        /// sync frame ohne content
-        /// </summary>
-        public Frame(string type, Int16 index, string ip, string port) : 
-            base(type, index, new byte []{}, ip, port){}
 
-        /// <summary>
-        /// normale frames die versendet werden
-        /// </summary>
-        public Frame(string type, Int16 index, Int16[] data, string ip, string port) :
-            base(type, index, getByteArray(data), ip, port) { }
+    class frameLog
+    {
+        DateTime timestamp;
+        FrameWorkingState ws;
+        string msg;
 
-        public Frame(string type, Int16 index, char[] data, string ip, string port) :
-            base(type, index, getByteArray(data), ip, port){}
+        public frameLog(FrameWorkingState ws, string msg)
+        {
+            this.ws = ws;
+            this.msg = msg;
+            timestamp = DateTime.Now;
+        }
+        public override string ToString()
+        {
+            return timestamp.ToString("HH:mm:ss:ffff") + " (" + ws.ToString() + ") " + msg;
+        }
+
+    }
+
+    public class FrameRcv : FrameRawData {
 
         /// <summary>
         /// frame das von stream über udp empfangen wird
         /// </summary>
-        public Frame(byte[] data, string ip, string port) :
-            base(data, ip, port) { }
+        public FrameRcv(string ip, string port, byte[] data) :
+            base(ip, port, data) { }
+
+    }
+
+   
+    public class  Frame : FrameRawData{
+        //public FrameRcv frameRcv;
+        /// <summary>
+        /// sync frame ohne content
+        /// </summary>
+        public Frame(string ip, string port, string type, Int16 index) :
+            base(ip, port, type, index, new byte[] { }) { }
+
+        /// <summary>
+        /// normale frames die versendet werden
+        /// </summary>
+        public Frame(string ip, string port, string type, Int16 index, Int16[] data) :
+            base(ip, port, type, index, getByteArray(data)) { }
+
+        public Frame(string ip, string port, string type, Int16 index, char[] data) :
+            base(ip, port, type, index, getByteArray(data)) { }
+
+
 
 
         /// <summary>

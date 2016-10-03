@@ -1,5 +1,3 @@
-branch: PLCSourceFile
-
 <h1>CpuPcStack</h1>
 udp schnittstelle zwischen pc und cpu
 
@@ -13,9 +11,44 @@ Ziel dieses Projekts ist es eine generische Schnittstelle zwischen PCs und CPUs 
 <h2>PC Seite</h2>
 <p>
 In überlagerten Applikationen soll diese Schnittstelle einfach integrierbar sein.</br>
-Referenz auf UdpPlcLIB anlegen</br>
-Interface verwenden: UdpPlcLIB.IUdpPlcLib</br>
+Referenz auf cpsLIB anlegen</br>
+Interface verwenden: public partial class FrmMain : Form, IcpsLIB{}</br>
 Instanz erstellen: UdpPlcLIB.net_udp net_udp = new UdpPlcLIB.net_udp(this);</br>
+
+        private delegate void srv_msgCallback(string s);
+        void IcpsLIB.logMsg(string msg)
+        {
+            try
+            {
+                this.Invoke(new srv_msgCallback(this.srv_msg_funkt), new object[] { msg });
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show("srv_msgCallback: " + e.Message, "writing to GUI failed");
+            }
+        }
+        private void srv_msg_funkt(string s)
+        {
+            tssl_server_status.Text = s;
+        }
+        #endregion
+
+        #region interprete_frame
+        private delegate void interprete_frameCallback(object f);
+        void IcpsLIB.interprete_frame(object o)
+        {
+            try
+            {
+                if (this.InvokeRequired)
+                    this.Invoke(new interprete_frameCallback(this.interprete_frame_fkt), new object[] { o });
+                else
+                    interprete_frame_fkt(o);
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show("interprete_frameCallback: " + e.Message, "writing to GUI failed");
+            }
+        }
 </p>
 
 <h2>CPU Seite</h2>
@@ -25,3 +58,4 @@ In der CPU gibt es zwei Global DBs (ein Empfangs- und ein Sendepuffer) die aus d
 Im Ordner plc_sourcen sind die notwendigen CPU Programmbausteine als SCL Code hinterlegt.
 Diese Dateien müssen mittels des Tools "TIA Portal" projektiert und in die CPU geladen werden.
 </p>
+

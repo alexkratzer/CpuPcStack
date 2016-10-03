@@ -16,11 +16,13 @@ namespace cpsLIB
     /// type => art des frames. z.b. SYNC zum verifizieren einer verbindung
     /// 
     /// ## sende acknowlege auf anfrage
-    /// ## SYN -> verbindungsüberwachung
-    /// ## containering -> udp frame besteht nicht aus einer sondern x nachrichten. 
     /// 
-    /// diese müssen auf der client seite eingepackt und auf der server seite ausgepackt werden
-    
+    public class FrameHeader {
+        bool SYNC = false; //Frame zum Verbindungsaufbau bzw zum Verbindungs Status ermitteln
+        bool containering = false; //Erweiterung für später -> udp frame besteht nicht aus einer sondern x nachrichten. 
+        //diese müssen auf der client seite eingepackt und auf der server seite ausgepackt werden
+    }
+
     /// </summary>
     public class FrameRawData
     {

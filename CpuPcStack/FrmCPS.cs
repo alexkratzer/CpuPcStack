@@ -10,12 +10,12 @@ using cpsLIB;
 
 namespace CpuPcStack
 {
-    public partial class FrmMain : Form, IcpsLIB
+    public partial class FrmCPS : Form, IcpsLIB
     {
         BindingList<FrameRawData> ListFrames = new BindingList<FrameRawData>();
         cpsLIB.cmd cpsCMD;
         
-        public FrmMain()
+        public FrmCPS()
         {
             cpsCMD = new cpsLIB.cmd(this);
             InitializeComponent();

@@ -1,6 +1,6 @@
 ﻿namespace CpuPcStack
 {
-    partial class FrmMain
+    partial class FrmCPS
     {
         /// <summary>
         /// Required designer variable.
@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FrmMain));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FrmCPS));
             this.label_ip = new System.Windows.Forms.Label();
             this.groupBox_client = new System.Windows.Forms.GroupBox();
             this.label_host_name_desc = new System.Windows.Forms.Label();

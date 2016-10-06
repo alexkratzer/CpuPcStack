@@ -1,4 +1,4 @@
-ChangeFrameStruct
+Master
 <h1>CpuPcStack</h1>
 udp schnittstelle zwischen pc und cpu
 

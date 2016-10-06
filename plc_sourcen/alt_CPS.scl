@@ -37,9 +37,8 @@ VERSION : 0.1
 BEGIN
 	
 	"CPS_send".msg["CPS_send".index_msg].remote_ip := #frame.remote_ip;
-	"CPS_send".msg["CPS_send".index_msg].StructVersion := #frame.StructVersion;
-	"CPS_send".msg["CPS_send".index_msg].HeaderFlags := #frame.HeaderFlags;
-	"CPS_send".msg["CPS_send".index_msg].FrameIndex := #frame.FrameIndex;
+	"CPS_send".msg["CPS_send".index_msg].type := #frame.type;
+	"CPS_send".msg["CPS_send".index_msg].index := #frame.index;
 	"CPS_send".msg["CPS_send".index_msg].data := #frame.data;
 	"CPS_send".msg["CPS_send".index_msg].frame_length := #frame.frame_length;
 	"CPS_send".index_msg := "CPS_send".index_msg + 1;
@@ -67,6 +66,7 @@ VERSION : 0.1
    VAR DB_SPECIFIC
       SENDdata : "UDT_CPSFrame";
       send_data_AT { S7_HMI_Accessible := 'False'; S7_HMI_Visible := 'False'} AT SENDdata : Array[0..512] of Byte;
+      send_data_byte : Array[0..512] of Byte;
    END_VAR
    VAR 
       RCVTCON {OriginalPartName := 'T_CON'; LibVersion := '3.0'} : TCON;
@@ -121,9 +121,19 @@ BEGIN
 	      "CPS_send".index_msg := "CPS_send".index_msg - 1;
 	      
 	      #SENDremote_addr.REM_IP_ADDR := "CPS_send".msg["CPS_send".index_msg].remote_ip;
-	      #SENDremote_addr.REM_PORT_NR := #port_remote; //TODO: port in SYNC frame von client mitliefern
+	      #SENDremote_addr.REM_PORT_NR := #port_remote;
 	      
 	      #SENDdata := "CPS_send".msg["CPS_send".index_msg];
+	      #send_data_byte := #send_data_AT;
+	      
+	      (*
+	      Strg_TO_Chars(Strg:= #data.type,
+	                    pChars:=0,
+	                    Cnt=>#IBS_string_to_char_length,
+	                    Chars:=#send_data_byte);
+	      #IBS_data_convert := #data;
+	      *)
+	      
 	    END_IF;
 	END_CASE;
 	
@@ -160,60 +170,40 @@ BEGIN
 	    
 	  #WORKING:
 	    IF #RCVTURCV.NDR THEN
-	        IF #RCVdata.StructVersion = 1 THEN
-	            IF (#RCVdata.HeaderFlags AND 2#1) <> 0 THEN
-	                ;// containering
-	            END_IF;
-	            
-	            // SYNC -> Empfangenes packet spiegeln und wieder zurück senden
-	            IF (#RCVdata.HeaderFlags AND 2#10) <> 0 THEN
-	                
-	                #RCVdata.remote_ip := #RCVremote_addr.REM_IP_ADDR;
-	                #RCVdata.frame_length := #RCVrcv_len;
-	                "sendCPS"(#RCVdata);
-	            END_IF;
-	            
-	            //wahrscheinlich wird es dieses bit nur von PLC zu PC geben
-	            IF (#RCVdata.HeaderFlags AND 2#100) <> 0 THEN
-	                ;// LogMessage
-	            END_IF;
-	            IF (#RCVdata.HeaderFlags AND 2#1000) <> 0 THEN
-	                ;// acknowledge
-	            END_IF;
-	            
-	            // ProcessData_value
-	            IF (#RCVdata.HeaderFlags AND 2#10000) <> 0 THEN
-	                //empfangene daten in interface DB einreihen
-	                "CPS_rcv".msg["CPS_rcv".index_msg] := #RCVdata;
-	                "CPS_rcv".msg["CPS_rcv".index_msg].remote_ip := #RCVremote_addr.REM_IP_ADDR;
-	                "CPS_rcv".msg["CPS_rcv".index_msg].frame_length := #RCVrcv_len;
-	                
-	                //index in DB erhöhen
-	                "CPS_rcv".index_msg := "CPS_rcv".index_msg + 1;
-	                
-	                //Ringpuffer überwachen
-	                IF "CPS_rcv".index_msg <= 20 THEN
-	                    //index in DB erhöhen
-	                    "CPS_rcv".index_msg := "CPS_rcv".index_msg + 1;
-	                ELSE
-	                    "CPS_rcv".index_msg := 0;
-	                END_IF;
-	            END_IF;
-	            IF (#RCVdata.HeaderFlags AND 2#100000) <> 0 THEN
-	                ;// ProcessData_param
-	            END_IF;
-	            
-	            // ManagementData
-	            IF (#RCVdata.HeaderFlags AND 2#1000000) <> 0 THEN
-	                ;
-	            END_IF;
-	        ELSE //Frame Struct <> 1 -> ERROR
-	            ;
-	        END_IF;
-	        
-	     
-	        
-	        END_IF;
+	      
+	      //empfangene daten in interface DB einreihen
+	      "CPS_rcv".msg["CPS_rcv".index_msg] := #RCVdata;
+	      "CPS_rcv".msg["CPS_rcv".index_msg].remote_ip := #RCVremote_addr.REM_IP_ADDR;
+	      "CPS_rcv".msg["CPS_rcv".index_msg].frame_length := #RCVrcv_len;
+	      
+	      //index in DB erhöhen
+	      "CPS_rcv".index_msg := "CPS_rcv".index_msg + 1;
+	      //Ringpuffer realisieren
+	      IF "CPS_rcv".index_msg >= 20 THEN
+	          "CPS_rcv".index_msg := 0;
+	      END_IF;
+	      
+	      (*
+	      FOR #tmp_count := 0 TO 3 DO
+	          "udp_msg_rcv".msg["udp_msg_rcv".index_msg].type[#tmp_count] := #data_rcv_byte[#tmp_count];
+	      END_FOR;
+	      
+	      "udp_msg_rcv".msg["udp_msg_rcv".index_msg].index := #data_rcv.index;
+	          
+	      MOVE_BLK(IN:=#data_rcv_byte[6],
+	               COUNT:=20,
+	               OUT=>"udp_msg_rcv".msg["udp_msg_rcv".index_msg].data[0]);
+	      *)
+	      
+	      //### IBS #### -> Empfangenes packet spiegeln und wieder zurück senden
+	      #RCVdata.remote_ip := #RCVremote_addr.REM_IP_ADDR;
+	      #RCVdata.frame_length := #RCVrcv_len;
+	      "sendCPS"(#RCVdata);
+	      //### IBS #### 
+	      
+	
+	    END_IF;
+	    
 	    
 	END_CASE;
 	
@@ -224,7 +214,7 @@ BEGIN
 	
 	#SENDTUSEND(ID := #CONNSEND_ID,
 	            LEN := #SENDdata.frame_length,
-	            DATA := #send_data_AT,
+	            DATA := #send_data_byte,
 	            ADDR := #SENDremote_addr);
 	
 	

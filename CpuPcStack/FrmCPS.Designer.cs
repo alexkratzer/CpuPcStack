@@ -49,8 +49,6 @@
             this.textBox_msg_payload_byte = new System.Windows.Forms.TextBox();
             this.checkBox_receive_big_endian = new System.Windows.Forms.CheckBox();
             this.checkBox_send_big_endian = new System.Windows.Forms.CheckBox();
-            this.comboBox_frame_type = new System.Windows.Forms.ComboBox();
-            this.textBox_send_index = new System.Windows.Forms.TextBox();
             this.groupBox_send_msg = new System.Windows.Forms.GroupBox();
             this.button_send_repeat = new System.Windows.Forms.Button();
             this.label_send_times = new System.Windows.Forms.Label();
@@ -83,6 +81,9 @@
             this.label_WATCHDOG_WORK = new System.Windows.Forms.Label();
             this.textBox_MaxSYNCResendTrys = new System.Windows.Forms.TextBox();
             this.label_MaxSYNCResendTrys_desc = new System.Windows.Forms.Label();
+            this.button1 = new System.Windows.Forms.Button();
+            this.checkBox_SYNC = new System.Windows.Forms.CheckBox();
+            this.checkBox_ManagementData = new System.Windows.Forms.CheckBox();
             this.groupBox_client.SuspendLayout();
             this.groupBox_send_msg.SuspendLayout();
             this.groupBox_status.SuspendLayout();
@@ -189,9 +190,9 @@
             // 
             // textBox_send
             // 
-            this.textBox_send.Location = new System.Drawing.Point(161, 23);
+            this.textBox_send.Location = new System.Drawing.Point(9, 23);
             this.textBox_send.Name = "textBox_send";
-            this.textBox_send.Size = new System.Drawing.Size(140, 20);
+            this.textBox_send.Size = new System.Drawing.Size(292, 20);
             this.textBox_send.TabIndex = 9;
             this.textBox_send.Text = "1,2,3,4";
             // 
@@ -275,26 +276,6 @@
             this.checkBox_send_big_endian.UseVisualStyleBackColor = true;
             this.checkBox_send_big_endian.CheckedChanged += new System.EventHandler(this.checkBox_big_endian_CheckedChanged);
             // 
-            // comboBox_frame_type
-            // 
-            this.comboBox_frame_type.FormattingEnabled = true;
-            this.comboBox_frame_type.Items.AddRange(new object[] {
-            "TSYN",
-            "TCMD"});
-            this.comboBox_frame_type.Location = new System.Drawing.Point(9, 23);
-            this.comboBox_frame_type.Name = "comboBox_frame_type";
-            this.comboBox_frame_type.Size = new System.Drawing.Size(73, 21);
-            this.comboBox_frame_type.TabIndex = 13;
-            this.comboBox_frame_type.Text = "DEMO";
-            // 
-            // textBox_send_index
-            // 
-            this.textBox_send_index.Location = new System.Drawing.Point(88, 23);
-            this.textBox_send_index.Name = "textBox_send_index";
-            this.textBox_send_index.Size = new System.Drawing.Size(67, 20);
-            this.textBox_send_index.TabIndex = 17;
-            this.textBox_send_index.Text = "1";
-            // 
             // groupBox_send_msg
             // 
             this.groupBox_send_msg.Controls.Add(this.button_send_repeat);
@@ -303,9 +284,7 @@
             this.groupBox_send_msg.Controls.Add(this.textBox_send);
             this.groupBox_send_msg.Controls.Add(this.button_check);
             this.groupBox_send_msg.Controls.Add(this.label_cyclic_desc);
-            this.groupBox_send_msg.Controls.Add(this.comboBox_frame_type);
             this.groupBox_send_msg.Controls.Add(this.checkBox_cyclic);
-            this.groupBox_send_msg.Controls.Add(this.textBox_send_index);
             this.groupBox_send_msg.Controls.Add(this.textBox_timer_interval);
             this.groupBox_send_msg.Controls.Add(this.label_repeat);
             this.groupBox_send_msg.Controls.Add(this.textBox_send_multiplikator);
@@ -511,26 +490,26 @@
             // stopServerToolStripMenuItem
             // 
             this.stopServerToolStripMenuItem.Name = "stopServerToolStripMenuItem";
-            this.stopServerToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.stopServerToolStripMenuItem.Size = new System.Drawing.Size(131, 22);
             this.stopServerToolStripMenuItem.Text = "stop server";
             this.stopServerToolStripMenuItem.Click += new System.EventHandler(this.stopServerToolStripMenuItem_Click);
             // 
             // startServerToolStripMenuItem
             // 
             this.startServerToolStripMenuItem.Name = "startServerToolStripMenuItem";
-            this.startServerToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.startServerToolStripMenuItem.Size = new System.Drawing.Size(131, 22);
             this.startServerToolStripMenuItem.Text = "start server";
             this.startServerToolStripMenuItem.Click += new System.EventHandler(this.startServerToolStripMenuItem_Click);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(149, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(128, 6);
             // 
             // statusToolStripMenuItem
             // 
             this.statusToolStripMenuItem.Name = "statusToolStripMenuItem";
-            this.statusToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.statusToolStripMenuItem.Size = new System.Drawing.Size(131, 22);
             this.statusToolStripMenuItem.Text = "status";
             this.statusToolStripMenuItem.Click += new System.EventHandler(this.statusToolStripMenuItem_Click);
             // 
@@ -616,11 +595,44 @@
             this.label_MaxSYNCResendTrys_desc.TabIndex = 15;
             this.label_MaxSYNCResendTrys_desc.Text = "MaxSYNCResendTrys:";
             // 
-            // FrmMain
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(370, 506);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(75, 23);
+            this.button1.TabIndex = 27;
+            this.button1.Text = "button1";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
+            // 
+            // checkBox_SYNC
+            // 
+            this.checkBox_SYNC.AutoSize = true;
+            this.checkBox_SYNC.Location = new System.Drawing.Point(168, 24);
+            this.checkBox_SYNC.Name = "checkBox_SYNC";
+            this.checkBox_SYNC.Size = new System.Drawing.Size(55, 17);
+            this.checkBox_SYNC.TabIndex = 28;
+            this.checkBox_SYNC.Text = "SYNC";
+            this.checkBox_SYNC.UseVisualStyleBackColor = true;
+            // 
+            // checkBox_ManagementData
+            // 
+            this.checkBox_ManagementData.AutoSize = true;
+            this.checkBox_ManagementData.Location = new System.Drawing.Point(168, 75);
+            this.checkBox_ManagementData.Name = "checkBox_ManagementData";
+            this.checkBox_ManagementData.Size = new System.Drawing.Size(111, 17);
+            this.checkBox_ManagementData.TabIndex = 29;
+            this.checkBox_ManagementData.Text = "ManagementData";
+            this.checkBox_ManagementData.UseVisualStyleBackColor = true;
+            // 
+            // FrmCPS
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1237, 573);
+            this.Controls.Add(this.checkBox_ManagementData);
+            this.Controls.Add(this.checkBox_SYNC);
+            this.Controls.Add(this.button1);
             this.Controls.Add(this.groupBox_settings);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.groupBox_status);
@@ -629,7 +641,7 @@
             this.Controls.Add(this.groupBox_send_msg);
             this.Controls.Add(this.menuStrip_main);
             this.MainMenuStrip = this.menuStrip_main;
-            this.Name = "FrmMain";
+            this.Name = "FrmCPS";
             this.Text = "CpuPcStack - PLCSourceFile";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FrmMain_FormClosing);
             this.groupBox_client.ResumeLayout(false);
@@ -660,13 +672,11 @@
         private System.Windows.Forms.TextBox textBox_srv_port;
         private System.Windows.Forms.TextBox textBox_send;
         private System.Windows.Forms.Button button_send_request;
-        private System.Windows.Forms.ComboBox comboBox_frame_type;
         private System.Windows.Forms.ComboBox comboBox_local_ips;
         private System.Windows.Forms.Label label_host_name;
         private System.Windows.Forms.Label label_host_name_desc;
         private System.Windows.Forms.CheckBox checkBox_send_big_endian;
         private System.Windows.Forms.CheckBox checkBox_receive_big_endian;
-        private System.Windows.Forms.TextBox textBox_send_index;
         private System.Windows.Forms.GroupBox groupBox_send_msg;
         private System.Windows.Forms.TextBox textBox_msg_payload_byte;
         private System.Windows.Forms.TextBox textBox_msg_payload_ASCII;
@@ -705,6 +715,9 @@
         private System.Windows.Forms.CheckBox checkBox_SendFramesCallback;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripMenuItem statusToolStripMenuItem;
+        private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.CheckBox checkBox_SYNC;
+        private System.Windows.Forms.CheckBox checkBox_ManagementData;
     }
 }
 

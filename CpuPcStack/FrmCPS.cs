@@ -10,12 +10,12 @@ using cpsLIB;
 
 namespace CpuPcStack
 {
-    public partial class FrmMain : Form, IcpsLIB
+    public partial class FrmCPS : Form, IcpsLIB
     {
         BindingList<FrameRawData> ListFrames = new BindingList<FrameRawData>();
         cpsLIB.cmd cpsCMD;
         
-        public FrmMain()
+        public FrmCPS()
         {
             cpsCMD = new cpsLIB.cmd(this);
             InitializeComponent();
@@ -42,6 +42,7 @@ namespace CpuPcStack
 
         private void FrmMain_FormClosing(object sender, FormClosingEventArgs e)
         {
+            cpsCMD.cleanup();
             TimerStop();
         }
 
@@ -93,10 +94,6 @@ namespace CpuPcStack
         private void send() {
             if (!String.IsNullOrEmpty(textBox_send.Text))
             {
-                Int16 counter = Convert.ToInt16(textBox_send_index.Text);
-                counter++;
-                textBox_send_index.Text = counter.ToString();
-
                 string[] msg = textBox_send.Text.Split(',', ';', ' ');
                 Frame f;
 
@@ -107,15 +104,19 @@ namespace CpuPcStack
                     for (int i = 0; i < msg.Length; i++)
                         intArray[i] = Int16.Parse(msg[i]);
 
-                    f = new Frame(textBox_remote_ip.Text, textBox_remotePort.Text, comboBox_frame_type.Text, counter, intArray);
-
+                    f = new Frame(textBox_remote_ip.Text, textBox_remotePort.Text, intArray);
                 }
                 else
                 {
                     //#### frame aus payload chars erstellen
                     char[] strArray = StrToChr(msg);
-                    f = new cpsLIB.Frame(textBox_remote_ip.Text, textBox_remotePort.Text, comboBox_frame_type.Text, counter, strArray);
+                    f = new cpsLIB.Frame(textBox_remote_ip.Text, textBox_remotePort.Text, strArray);
                 }
+
+                if (checkBox_SYNC.Checked)
+                    f.SetHeaderFlag(FrameHeaderFlag.SYNC);
+                if (checkBox_ManagementData.Checked)
+                    f.SetHeaderFlag(FrameHeaderFlag.ManagementData);
 
                 for (int i = 0; i < Convert.ToInt32(textBox_send_multiplikator.Text); i++)
                     cpsCMD.send(f);
@@ -319,8 +320,8 @@ namespace CpuPcStack
             label1.Text =
     //"state: " + cpsCMD.state.ToString() + Environment.NewLine +
     "InWorkFrameCount: " + cpsCMD.InWorkFrameCount() + Environment.NewLine +
-    "TotalFramesSend: " + Frame.CountSendFrames + Environment.NewLine +
-    "TotalFramesReceive" + Frame.CountRcvFrames + Environment.NewLine +
+    //"TotalFramesSend: " + Frame.CountSendFrames + Environment.NewLine +
+    //"TotalFramesReceive" + Frame.CountRcvFrames + Environment.NewLine +
     "TotalFramesFinished: " + cpsCMD.TotalFramesFinished.ToString() + Environment.NewLine +
     //"check_trys: " + cpsCMD.check_trys.ToString() + Environment.NewLine +
     "";//"fstackLogCount: " + cpsCMD.fstackLogCount().ToString() + Environment.NewLine;
@@ -348,7 +349,7 @@ namespace CpuPcStack
                 textBox_msg_payload_ASCII.Text = f.getPayloadASCII();
                 //sender
                 label_frameLog.Text = f.GetLog();
-                label_frameMetadata.Text = f.GetMetaInfo();
+                label_frameMetadata.Text = f.ToString();
             }
         }
 
@@ -372,6 +373,25 @@ namespace CpuPcStack
             cpsCMD.SendOnlyIfConnected = checkBox_SendOnlyIfConnected.Checked;
         }
         #endregion
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            Frame f = new Frame(textBox_remote_ip.Text, textBox_remotePort.Text);
+            f.SetHeaderFlag(FrameHeaderFlag.containering);
+            cpsCMD.send(f);
+
+            Frame f1 = new Frame(textBox_remote_ip.Text, textBox_remotePort.Text);
+            f1.SetHeaderFlag(FrameHeaderFlag.LogMessage);
+            cpsCMD.send(f1);
+
+            Frame f2 = new Frame(textBox_remote_ip.Text, textBox_remotePort.Text);
+            f2.SetHeaderFlag(FrameHeaderFlag.SYNC);
+            cpsCMD.send(f2);
+
+            Frame f3 = new Frame(textBox_remote_ip.Text, textBox_remotePort.Text);
+            f3.SetHeaderFlag(FrameHeaderFlag.ManagementData);
+            cpsCMD.send(f3);
+        }
 
 
 

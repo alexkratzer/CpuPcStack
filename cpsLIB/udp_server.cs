@@ -22,7 +22,6 @@ namespace cpsLIB
             _sender = FrmMain;
             if(!int.TryParse(port, out _srvPort))
                 _sender.server_message("udp_server -> error convert Port to int: " + port);
-            //_srvPort = Convert.ToInt32(port);
             initSrv();
         }
 
@@ -66,15 +65,14 @@ namespace cpsLIB
                     while (this.listening)
                     {
                         byte[] bytes = listener.Receive(ref groupEP);
-                        //_FrmMain.srv_msg("udp_server receive MESSAGE from: " + groupEP.Address.ToString() + ":" + groupEP.Port.ToString());
-
+                        //_sender.server_message("udp_server receive MESSAGE from: " + groupEP.Address.ToString() + ":" + groupEP.Port.ToString());
+                        
                         if (bytes == null || bytes.Length == 0)
                             _sender.server_message(groupEP.Address.ToString() + ":" + groupEP.Port.ToString() + 
                                 "udp_server receive ########### EMPTY MESSAGE ################# ");
 
-                        FrameRcv f = new FrameRcv(groupEP.Address.ToString(), groupEP.Port.ToString(), bytes );
-                        //im konstruktor für empfangs frames gibt es keine Log Liste
-                        //f.ChangeState(FrameWorkingState.received, "udp server received new frame");
+                        Frame f = new Frame(groupEP.Address.ToString(), groupEP.Port.ToString(), bytes );
+                        f.ChangeState(FrameWorkingState.received, "udp server received new frame");
                         _sender.receive(f);
                     }
                 }

@@ -40,11 +40,11 @@ namespace cpsLIB
             //_fstackLog = new System.Collections.Concurrent.ConcurrentQueue<Frame>();
             StackWorker();
         }
-
+  
         #region client
         public void send(Frame f)
         {
-            if (ConnectVerifyState(f, udp_state.connected) || FrameType.SYNC.ToString().Equals(f._type))
+            if (ConnectVerifyState(f, udp_state.connected) || f.GetHeaderFlag(FrameHeaderFlag.SYNC))
             {
                 if (putFrameToStack(f))
                 {
@@ -66,7 +66,8 @@ namespace cpsLIB
             {
                 if (cs.ip.Equals(ip) && cs.sport == port)
                 {
-                    Frame f = new Frame(ip, port.ToString(), FrameType.SYNC.ToString(), cs.check_trys);
+                    Frame f = new Frame(ip, port.ToString());
+                    f.SetHeaderFlag(FrameHeaderFlag.SYNC);
                     send(f);
                     cs.check_trys++;
                     cs.state = udp_state.unknown;
@@ -124,7 +125,7 @@ namespace cpsLIB
             _FrmMain.logMsg(msg);
         }
 
-        public void receive(FrameRcv f)
+        public void receive(Frame f)
         {
             //TODO: handle different IP requests in list
             
@@ -137,7 +138,7 @@ namespace cpsLIB
             if (!_fstack.IsEmpty)
             {
                 foreach (Frame frameStack in _fstack)
-                    if (frameStack._sequenzeNumber == f._sequenzeNumber)
+                    if (frameStack.GetIndex() == f.GetIndex())
                     {
                         //+++++++++++++++++ matching rcv frame to frame in stack +++++++++++++++++++
                         if (takeFrameFromStack(frameStack))
@@ -152,9 +153,9 @@ namespace cpsLIB
                     }
             }
             f.ChangeState(FrameWorkingState.error, "received udp frame without request...");
-            _FrmMain.logMsg("received udp frame without request...");
+            server_message("received udp frame without request...");
         }
-        private void ConnectStateChange(FrameRcv f, udp_state state)
+        private void ConnectStateChange(Frame f, udp_state state)
         {
             foreach (connectStatus cs in ListConnectStatus)
                 if (cs.ip.Equals(f.RemoteIp)) //Sende und Remote Port sind unterschiedlich -> cs.iport == f.RemotePort
@@ -198,7 +199,7 @@ namespace cpsLIB
             if (!_fstack.IsEmpty)
                 foreach (Frame frame in _fstack)
                 {
-                    if (frame.isEqualExeptIndex(f))
+                    if (frame.isEqualExeptIndex_WASTE(f))
                     {
                         f.ChangeState(FrameWorkingState.error, "Frame already in send buffer");
                         //_fstackLog.Enqueue(f);
@@ -231,6 +232,7 @@ namespace cpsLIB
         //    return s;
         //}
         #endregion
+        
         #region thread worker
         Thread ThreadStackWorker;
         private void StackWorker()
@@ -254,7 +256,7 @@ namespace cpsLIB
                         if (f.LastSendDateTime.AddMilliseconds(WATCHDOG_WORK) < DateTime.Now)
                         {
                             //hit Watchdog
-                            if (f._type.Equals(FrameType.SYNC.ToString()))
+                            if (f.GetHeaderFlag(FrameHeaderFlag.SYNC) )
                             {
                                 if (f.SendTrys < MaxSYNCResendTrys)
                                 {
@@ -279,6 +281,13 @@ namespace cpsLIB
                 }
                 Thread.Sleep(100);
             }
+        }
+        #endregion
+
+        #region cleanup
+        public void cleanup() {
+            serverSTOP();
+            Thread.Sleep(100);
         }
         #endregion
 

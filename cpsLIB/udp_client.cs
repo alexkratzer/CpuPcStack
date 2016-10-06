@@ -33,7 +33,7 @@ namespace cpsLIB
             try
             {
                 f.ChangeState(FrameWorkingState.send, "send udp frame @: " + f.RemoteIp + ":" +  f.RemotePort);
-                udpClient.Send(f.bytes(), f.length(), f.RemoteIp, f.RemotePort);
+                udpClient.Send(f.GetByteArray(), f.GetByteArray().Length, f.RemoteIp, f.RemotePort);
                 udpClient.Close();
             }
             catch (Exception e) {

@@ -85,7 +85,9 @@ namespace CpuPcStack
         private void button_send_repeat_Click(object sender, EventArgs e)
         {
             for (int i = 0; i < Convert.ToInt32(textBox_send_multiplikator.Text); i++)
+            {
                 send();
+            }
         }
 
         #endregion
@@ -117,8 +119,9 @@ namespace CpuPcStack
                     f.SetHeaderFlag(FrameHeaderFlag.SYNC);
                 if (checkBox_ManagementData.Checked)
                     f.SetHeaderFlag(FrameHeaderFlag.ManagementData);
+                if (checkBox_acknowledge.Checked)
+                    f.SetHeaderFlag(FrameHeaderFlag.acknowledge);
 
-                for (int i = 0; i < Convert.ToInt32(textBox_send_multiplikator.Text); i++)
                     cpsCMD.send(f);
             }
             else
@@ -320,10 +323,12 @@ namespace CpuPcStack
             label1.Text =
     //"state: " + cpsCMD.state.ToString() + Environment.NewLine +
     "InWorkFrameCount: " + cpsCMD.InWorkFrameCount() + Environment.NewLine +
-    //"TotalFramesSend: " + Frame.CountSendFrames + Environment.NewLine +
-    //"TotalFramesReceive" + Frame.CountRcvFrames + Environment.NewLine +
+    "GetCountRcvFrames: " + Frame.GetCountRcvFrames() + Environment.NewLine +
+    "GetCountSendFrames" + Frame.GetCountSendFrames() + Environment.NewLine +
     "TotalFramesFinished: " + cpsCMD.TotalFramesFinished.ToString() + Environment.NewLine +
     //"check_trys: " + cpsCMD.check_trys.ToString() + Environment.NewLine +
+    "Time Max: " + cpsCMD.TimeRcvAnswerMax.Milliseconds.ToString() + " ms" + Environment.NewLine +
+    "Time Min: " + cpsCMD.TimeRcvAnswerMin.Milliseconds.ToString() + " ms" + Environment.NewLine +
     "";//"fstackLogCount: " + cpsCMD.fstackLogCount().ToString() + Environment.NewLine;
             
         }
@@ -342,14 +347,20 @@ namespace CpuPcStack
         {
             if (listBox_frameLog.SelectedItem != null)
             {
-                FrameRawData f = (FrameRawData)listBox_frameLog.SelectedItem;
+                Frame f = (Frame)listBox_frameLog.SelectedItem;
 
                 textBox_msg_payload_byte.Text = f.getPayloadByte();
+                textBox_msg_payload_hex.Text = f.getPayloadHex();
                 textBox_msg_payload_int.Text = f.getPayloadInt();
                 textBox_msg_payload_ASCII.Text = f.getPayloadASCII();
                 //sender
                 label_frameLog.Text = f.GetLog();
                 label_frameMetadata.Text = f.ToString();
+
+                if (f.AnswerFrame != null)
+                    label_frameLog_answer.Text = f.AnswerFrame.GetLog();
+                else
+                    label_frameLog_answer.Text = "";
             }
         }
 

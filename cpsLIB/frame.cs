@@ -10,7 +10,7 @@ using System.Net;
     
 namespace cpsLIB
 {
-    public enum FrameSender { SendToRemote, RcvFromRemote, unknown }
+    public enum FrameSender { SEND, RCVE, unknown }
     public enum FrameState { ERROR, IS_OK}
     public enum FrameWorkingState { created, inWork, finish, error, warning, received, send}
 
@@ -76,7 +76,7 @@ namespace cpsLIB
                 _FrameIndex = BitConverter.ToInt16(ByteArray, 4);
 
                 extractet_payload = new byte[ByteArray.Length - FrameHeaderByteLength];
-                System.Buffer.BlockCopy(ByteArray, 0, extractet_payload, 0, extractet_payload.Length);
+                System.Buffer.BlockCopy(ByteArray, FrameHeaderByteLength, extractet_payload, 0, extractet_payload.Length);
             }
             else
                 throw new Exception("Exception making FrameHeader: ByteArray.Length < " + FrameHeaderByteLength.ToString());
@@ -133,6 +133,7 @@ namespace cpsLIB
     public class FrameRawData
     {
         #region vars
+        //frame content
         private FrameHeader header;
         private byte[] FramePayloadByte;
 
@@ -146,6 +147,8 @@ namespace cpsLIB
         public FrameState frameState = FrameState.IS_OK;
         public int SendTrys; //Wird bei FrameType.SYNC Frames verwendet. Anzahl der wiederholungen bei keiner antwort
         public DateTime LastSendDateTime;
+        public TimeSpan TimeRcvAnswer; //wird beim empfangen einer antwort gesetzt
+        
         
         // static meta data
         public static bool SendBigEndian = false; //PC = Little-Endian, CPU = Big-Endian
@@ -177,14 +180,14 @@ namespace cpsLIB
 
             if (int.TryParse(port, out RemotePort))
             {
-                if (frameSender.Equals(FrameSender.SendToRemote)) {
+                if (frameSender.Equals(FrameSender.SEND)) {
                     // ++ send Frame to Remote ++
                     //data is only payload, no FrameHeader
                     ChangeState(FrameWorkingState.created, "make new frame to send it later on");
                     header = new FrameHeader();
                     FramePayloadByte = data;
                 }
-                else if (frameSender.Equals(FrameSender.RcvFromRemote)) {
+                else if (frameSender.Equals(FrameSender.RCVE)) {
                     // ++ rcv Frame from Remote ++
                     //data includes FrameHeader
                     ChangeState(FrameWorkingState.created, "make new frame from rcv UDP Frame");
@@ -207,8 +210,8 @@ namespace cpsLIB
         #region functions 
         public override string ToString()
         {
-            return header.ToString() + TimeCreated.ToString("HH:mm:ss:fff") + " (" + frameState.ToString() + "/" + frameSender.ToString() + "/" +
-                ") [" + RemoteIp + ":" + RemotePort + "] ";
+            return TimeCreated.ToString("HH:mm:ss:fff") + " (" + frameSender.ToString() + "/" + frameState.ToString() + "/" +
+                ") [" + RemoteIp + ":" + RemotePort + "] " + header.ToString();
         }
 
         private byte[] changeEndian(byte[] data)
@@ -226,6 +229,7 @@ namespace cpsLIB
         {
             header.SetHeaderFlag(fhf);
         }
+
         /// <summary>
         /// vergleicht den type und payload zweier frames auf gleichheit.
         /// </summary>
@@ -233,14 +237,16 @@ namespace cpsLIB
         /// <returns>bei gleich TRUE; bei unterschiedlich FALSE</returns>
         public bool isEqualExeptIndex_WASTE(Frame f)
         {
-            //TODO wird nicht oft durchlaufen, evtl nur bei hoher last
-            //log.msg(this, "isEqualExeptIndex: " + f.GetMetaInfo());
-
             //Beide Frames haben gleichen Type und gleiche Remote IP Adresse
             if (f.RemoteIp.Equals(RemoteIp))
             {
                 //if (f._type.Equals(_type))
                 //{
+                if (FramePayloadByte.Equals(f.FramePayloadByte) && header.Equals(f.header))
+                    return true;
+                else
+                    return false;
+                /*
                 if (FramePayloadByte != null)
                 {
                     if (FramePayloadByte.Length == f.FramePayloadByte.Length)
@@ -259,6 +265,7 @@ namespace cpsLIB
                     return false;
                 //}
                 //return false;
+                 */ 
             }
             return false;
         }
@@ -296,6 +303,10 @@ namespace cpsLIB
                 s += FramePayloadByte[i].ToString() + ", ";
             return s;
         }
+        public string getPayloadHex()
+        {
+            return BitConverter.ToString(FramePayloadByte);
+        }
         //TODO: für IBS um an der GUI darzustellen. später evtl rausnehmen
         public string getPayloadInt()
         {
@@ -328,6 +339,7 @@ namespace cpsLIB
         public string GetLog()
         {
             string s = "";
+            
             foreach (frameLog fl in ListFrameLog)
                 s += fl.ToString() + Environment.NewLine;
             return s;
@@ -339,6 +351,13 @@ namespace cpsLIB
 
         public bool GetHeaderFlag(FrameHeaderFlag fhf) {
             return header.GetHeaderFlag(fhf);
+        }
+
+        public static int GetCountSendFrames() {
+            return FrameHeader.SendFramesCount;
+        }
+        public static int GetCountRcvFrames() {
+            return FrameHeader.RcvFramesCount;
         }
         #endregion
     }
@@ -364,24 +383,26 @@ namespace cpsLIB
 
    
     public class  Frame : FrameRawData{
+        public FrameRawData AnswerFrame = null;
+
         /// <summary>
         /// sync frame ohne content das versendet wird
         /// </summary>
         public Frame(string ip, string port) :
-            base(ip, port, new byte[] { }, FrameSender.SendToRemote) { }
+            base(ip, port, new byte[] { }, FrameSender.SEND) { }
 
         /// <summary>
         /// normale frames die versendet werden
         /// </summary>
         public Frame(string ip, string port, Int16[] data) :
-            base(ip, port, getByteArray(data), FrameSender.SendToRemote) { }
+            base(ip, port, getByteArray(data), FrameSender.SEND) { }
 
         public Frame(string ip, string port, char[] data) :
-            base(ip, port, getByteArray(data), FrameSender.SendToRemote) { }
+            base(ip, port, getByteArray(data), FrameSender.SEND) { }
 
         //Frame das Empfangen wurde
         public Frame(string ip, string port, byte[] data) :
-            base(ip, port, data, FrameSender.RcvFromRemote) { }
+            base(ip, port, data, FrameSender.RCVE) { }
 
 
 
@@ -411,9 +432,9 @@ namespace cpsLIB
         }
 
         //TODO: wo ist little endian?
-        public void _sendBigEndian(bool _BigEndian) { 
-            Frame.SendBigEndian = _BigEndian;
-        }
+        //public void _sendBigEndian(bool _BigEndian) { 
+        //    Frame.SendBigEndian = _BigEndian;
+        //}
      
 
     }

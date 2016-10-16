@@ -50,7 +50,10 @@
             this.checkBox_receive_big_endian = new System.Windows.Forms.CheckBox();
             this.checkBox_send_big_endian = new System.Windows.Forms.CheckBox();
             this.groupBox_send_msg = new System.Windows.Forms.GroupBox();
+            this.checkBox_ManagementData = new System.Windows.Forms.CheckBox();
+            this.checkBox_acknowledge = new System.Windows.Forms.CheckBox();
             this.button_send_repeat = new System.Windows.Forms.Button();
+            this.checkBox_SYNC = new System.Windows.Forms.CheckBox();
             this.label_send_times = new System.Windows.Forms.Label();
             this.button_check = new System.Windows.Forms.Button();
             this.label_cyclic_desc = new System.Windows.Forms.Label();
@@ -62,6 +65,9 @@
             this.radioButton_send_byte = new System.Windows.Forms.RadioButton();
             this.label1 = new System.Windows.Forms.Label();
             this.groupBox_status = new System.Windows.Forms.GroupBox();
+            this.label_frameLog_answer = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
+            this.textBox_msg_payload_hex = new System.Windows.Forms.TextBox();
             this.label_frameMetadata = new System.Windows.Forms.Label();
             this.label_frameLog = new System.Windows.Forms.Label();
             this.listBox_frameLog = new System.Windows.Forms.ListBox();
@@ -82,8 +88,6 @@
             this.textBox_MaxSYNCResendTrys = new System.Windows.Forms.TextBox();
             this.label_MaxSYNCResendTrys_desc = new System.Windows.Forms.Label();
             this.button1 = new System.Windows.Forms.Button();
-            this.checkBox_SYNC = new System.Windows.Forms.CheckBox();
-            this.checkBox_ManagementData = new System.Windows.Forms.CheckBox();
             this.groupBox_client.SuspendLayout();
             this.groupBox_send_msg.SuspendLayout();
             this.groupBox_status.SuspendLayout();
@@ -190,7 +194,7 @@
             // 
             // textBox_send
             // 
-            this.textBox_send.Location = new System.Drawing.Point(9, 23);
+            this.textBox_send.Location = new System.Drawing.Point(9, 70);
             this.textBox_send.Name = "textBox_send";
             this.textBox_send.Size = new System.Drawing.Size(292, 20);
             this.textBox_send.TabIndex = 9;
@@ -198,9 +202,9 @@
             // 
             // button_send_request
             // 
-            this.button_send_request.Location = new System.Drawing.Point(161, 50);
+            this.button_send_request.Location = new System.Drawing.Point(5, 18);
             this.button_send_request.Name = "button_send_request";
-            this.button_send_request.Size = new System.Drawing.Size(140, 23);
+            this.button_send_request.Size = new System.Drawing.Size(112, 23);
             this.button_send_request.TabIndex = 11;
             this.button_send_request.Text = "send";
             this.button_send_request.UseVisualStyleBackColor = true;
@@ -209,7 +213,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(476, 67);
+            this.label2.Location = new System.Drawing.Point(476, 89);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(61, 13);
             this.label2.TabIndex = 17;
@@ -217,15 +221,15 @@
             // 
             // textBox_msg_payload_int
             // 
-            this.textBox_msg_payload_int.Location = new System.Drawing.Point(553, 64);
+            this.textBox_msg_payload_int.Location = new System.Drawing.Point(553, 86);
             this.textBox_msg_payload_int.Name = "textBox_msg_payload_int";
-            this.textBox_msg_payload_int.Size = new System.Drawing.Size(192, 20);
+            this.textBox_msg_payload_int.Size = new System.Drawing.Size(335, 20);
             this.textBox_msg_payload_int.TabIndex = 16;
             // 
             // label_payload_ascii
             // 
             this.label_payload_ascii.AutoSize = true;
-            this.label_payload_ascii.Location = new System.Drawing.Point(475, 93);
+            this.label_payload_ascii.Location = new System.Drawing.Point(475, 115);
             this.label_payload_ascii.Name = "label_payload_ascii";
             this.label_payload_ascii.Size = new System.Drawing.Size(71, 13);
             this.label_payload_ascii.TabIndex = 15;
@@ -242,16 +246,16 @@
             // 
             // textBox_msg_payload_ASCII
             // 
-            this.textBox_msg_payload_ASCII.Location = new System.Drawing.Point(553, 90);
+            this.textBox_msg_payload_ASCII.Location = new System.Drawing.Point(553, 112);
             this.textBox_msg_payload_ASCII.Name = "textBox_msg_payload_ASCII";
-            this.textBox_msg_payload_ASCII.Size = new System.Drawing.Size(192, 20);
+            this.textBox_msg_payload_ASCII.Size = new System.Drawing.Size(335, 20);
             this.textBox_msg_payload_ASCII.TabIndex = 13;
             // 
             // textBox_msg_payload_byte
             // 
             this.textBox_msg_payload_byte.Location = new System.Drawing.Point(553, 36);
             this.textBox_msg_payload_byte.Name = "textBox_msg_payload_byte";
-            this.textBox_msg_payload_byte.Size = new System.Drawing.Size(192, 20);
+            this.textBox_msg_payload_byte.Size = new System.Drawing.Size(335, 20);
             this.textBox_msg_payload_byte.TabIndex = 12;
             // 
             // checkBox_receive_big_endian
@@ -278,8 +282,11 @@
             // 
             // groupBox_send_msg
             // 
+            this.groupBox_send_msg.Controls.Add(this.checkBox_ManagementData);
+            this.groupBox_send_msg.Controls.Add(this.checkBox_acknowledge);
             this.groupBox_send_msg.Controls.Add(this.button_send_repeat);
             this.groupBox_send_msg.Controls.Add(this.button_send_request);
+            this.groupBox_send_msg.Controls.Add(this.checkBox_SYNC);
             this.groupBox_send_msg.Controls.Add(this.label_send_times);
             this.groupBox_send_msg.Controls.Add(this.textBox_send);
             this.groupBox_send_msg.Controls.Add(this.button_check);
@@ -290,14 +297,34 @@
             this.groupBox_send_msg.Controls.Add(this.textBox_send_multiplikator);
             this.groupBox_send_msg.Location = new System.Drawing.Point(12, 207);
             this.groupBox_send_msg.Name = "groupBox_send_msg";
-            this.groupBox_send_msg.Size = new System.Drawing.Size(313, 151);
+            this.groupBox_send_msg.Size = new System.Drawing.Size(313, 166);
             this.groupBox_send_msg.TabIndex = 18;
             this.groupBox_send_msg.TabStop = false;
             this.groupBox_send_msg.Text = "send message";
             // 
+            // checkBox_ManagementData
+            // 
+            this.checkBox_ManagementData.AutoSize = true;
+            this.checkBox_ManagementData.Location = new System.Drawing.Point(165, 47);
+            this.checkBox_ManagementData.Name = "checkBox_ManagementData";
+            this.checkBox_ManagementData.Size = new System.Drawing.Size(111, 17);
+            this.checkBox_ManagementData.TabIndex = 29;
+            this.checkBox_ManagementData.Text = "ManagementData";
+            this.checkBox_ManagementData.UseVisualStyleBackColor = true;
+            // 
+            // checkBox_acknowledge
+            // 
+            this.checkBox_acknowledge.AutoSize = true;
+            this.checkBox_acknowledge.Location = new System.Drawing.Point(70, 47);
+            this.checkBox_acknowledge.Name = "checkBox_acknowledge";
+            this.checkBox_acknowledge.Size = new System.Drawing.Size(90, 17);
+            this.checkBox_acknowledge.TabIndex = 30;
+            this.checkBox_acknowledge.Text = "acknowledge";
+            this.checkBox_acknowledge.UseVisualStyleBackColor = true;
+            // 
             // button_send_repeat
             // 
-            this.button_send_repeat.Location = new System.Drawing.Point(224, 109);
+            this.button_send_repeat.Location = new System.Drawing.Point(177, 130);
             this.button_send_repeat.Name = "button_send_repeat";
             this.button_send_repeat.Size = new System.Drawing.Size(75, 23);
             this.button_send_repeat.TabIndex = 28;
@@ -305,10 +332,20 @@
             this.button_send_repeat.UseVisualStyleBackColor = true;
             this.button_send_repeat.Click += new System.EventHandler(this.button_send_repeat_Click);
             // 
+            // checkBox_SYNC
+            // 
+            this.checkBox_SYNC.AutoSize = true;
+            this.checkBox_SYNC.Location = new System.Drawing.Point(9, 47);
+            this.checkBox_SYNC.Name = "checkBox_SYNC";
+            this.checkBox_SYNC.Size = new System.Drawing.Size(55, 17);
+            this.checkBox_SYNC.TabIndex = 28;
+            this.checkBox_SYNC.Text = "SYNC";
+            this.checkBox_SYNC.UseVisualStyleBackColor = true;
+            // 
             // label_send_times
             // 
             this.label_send_times.AutoSize = true;
-            this.label_send_times.Location = new System.Drawing.Point(138, 115);
+            this.label_send_times.Location = new System.Drawing.Point(91, 136);
             this.label_send_times.Name = "label_send_times";
             this.label_send_times.Size = new System.Drawing.Size(80, 13);
             this.label_send_times.TabIndex = 27;
@@ -316,7 +353,7 @@
             // 
             // button_check
             // 
-            this.button_check.Location = new System.Drawing.Point(9, 50);
+            this.button_check.Location = new System.Drawing.Point(9, 97);
             this.button_check.Name = "button_check";
             this.button_check.Size = new System.Drawing.Size(112, 23);
             this.button_check.TabIndex = 26;
@@ -327,7 +364,7 @@
             // label_cyclic_desc
             // 
             this.label_cyclic_desc.AutoSize = true;
-            this.label_cyclic_desc.Location = new System.Drawing.Point(279, 86);
+            this.label_cyclic_desc.Location = new System.Drawing.Point(226, 102);
             this.label_cyclic_desc.Name = "label_cyclic_desc";
             this.label_cyclic_desc.Size = new System.Drawing.Size(20, 13);
             this.label_cyclic_desc.TabIndex = 25;
@@ -336,7 +373,7 @@
             // checkBox_cyclic
             // 
             this.checkBox_cyclic.AutoSize = true;
-            this.checkBox_cyclic.Location = new System.Drawing.Point(161, 83);
+            this.checkBox_cyclic.Location = new System.Drawing.Point(248, 101);
             this.checkBox_cyclic.Name = "checkBox_cyclic";
             this.checkBox_cyclic.Size = new System.Drawing.Size(53, 17);
             this.checkBox_cyclic.TabIndex = 24;
@@ -346,16 +383,16 @@
             // 
             // textBox_timer_interval
             // 
-            this.textBox_timer_interval.Location = new System.Drawing.Point(229, 83);
+            this.textBox_timer_interval.Location = new System.Drawing.Point(183, 99);
             this.textBox_timer_interval.Name = "textBox_timer_interval";
-            this.textBox_timer_interval.Size = new System.Drawing.Size(44, 20);
+            this.textBox_timer_interval.Size = new System.Drawing.Size(37, 20);
             this.textBox_timer_interval.TabIndex = 23;
             this.textBox_timer_interval.Text = "1000";
             // 
             // label_repeat
             // 
             this.label_repeat.AutoSize = true;
-            this.label_repeat.Location = new System.Drawing.Point(15, 115);
+            this.label_repeat.Location = new System.Drawing.Point(11, 137);
             this.label_repeat.Name = "label_repeat";
             this.label_repeat.Size = new System.Drawing.Size(33, 13);
             this.label_repeat.TabIndex = 22;
@@ -363,9 +400,9 @@
             // 
             // textBox_send_multiplikator
             // 
-            this.textBox_send_multiplikator.Location = new System.Drawing.Point(61, 112);
+            this.textBox_send_multiplikator.Location = new System.Drawing.Point(50, 133);
             this.textBox_send_multiplikator.Name = "textBox_send_multiplikator";
-            this.textBox_send_multiplikator.Size = new System.Drawing.Size(66, 20);
+            this.textBox_send_multiplikator.Size = new System.Drawing.Size(31, 20);
             this.textBox_send_multiplikator.TabIndex = 21;
             this.textBox_send_multiplikator.Text = "1";
             // 
@@ -402,6 +439,9 @@
             // 
             // groupBox_status
             // 
+            this.groupBox_status.Controls.Add(this.label_frameLog_answer);
+            this.groupBox_status.Controls.Add(this.label3);
+            this.groupBox_status.Controls.Add(this.textBox_msg_payload_hex);
             this.groupBox_status.Controls.Add(this.label_frameMetadata);
             this.groupBox_status.Controls.Add(this.label2);
             this.groupBox_status.Controls.Add(this.label_frameLog);
@@ -417,6 +457,31 @@
             this.groupBox_status.TabIndex = 24;
             this.groupBox_status.TabStop = false;
             this.groupBox_status.Text = "status";
+            // 
+            // label_frameLog_answer
+            // 
+            this.label_frameLog_answer.AutoSize = true;
+            this.label_frameLog_answer.Location = new System.Drawing.Point(476, 268);
+            this.label_frameLog_answer.Name = "label_frameLog_answer";
+            this.label_frameLog_answer.Size = new System.Drawing.Size(119, 13);
+            this.label_frameLog_answer.TabIndex = 28;
+            this.label_frameLog_answer.Text = "label_frameLog_answer";
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(476, 63);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(67, 13);
+            this.label3.TabIndex = 27;
+            this.label3.Text = "payload hex:";
+            // 
+            // textBox_msg_payload_hex
+            // 
+            this.textBox_msg_payload_hex.Location = new System.Drawing.Point(553, 60);
+            this.textBox_msg_payload_hex.Name = "textBox_msg_payload_hex";
+            this.textBox_msg_payload_hex.Size = new System.Drawing.Size(335, 20);
+            this.textBox_msg_payload_hex.TabIndex = 26;
             // 
             // label_frameMetadata
             // 
@@ -467,7 +532,7 @@
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripDropDownButton1,
             this.tssl_server_status});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 551);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 553);
             this.statusStrip1.Name = "statusStrip1";
             this.statusStrip1.Size = new System.Drawing.Size(1237, 22);
             this.statusStrip1.TabIndex = 26;
@@ -532,7 +597,7 @@
             this.groupBox_settings.Controls.Add(this.radioButton_send_byte);
             this.groupBox_settings.Controls.Add(this.checkBox_receive_big_endian);
             this.groupBox_settings.Controls.Add(this.checkBox_send_big_endian);
-            this.groupBox_settings.Location = new System.Drawing.Point(12, 365);
+            this.groupBox_settings.Location = new System.Drawing.Point(12, 379);
             this.groupBox_settings.Name = "groupBox_settings";
             this.groupBox_settings.Size = new System.Drawing.Size(313, 157);
             this.groupBox_settings.TabIndex = 26;
@@ -597,7 +662,7 @@
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(370, 506);
+            this.button1.Location = new System.Drawing.Point(353, 495);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(75, 23);
             this.button1.TabIndex = 27;
@@ -605,33 +670,11 @@
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
-            // checkBox_SYNC
-            // 
-            this.checkBox_SYNC.AutoSize = true;
-            this.checkBox_SYNC.Location = new System.Drawing.Point(168, 24);
-            this.checkBox_SYNC.Name = "checkBox_SYNC";
-            this.checkBox_SYNC.Size = new System.Drawing.Size(55, 17);
-            this.checkBox_SYNC.TabIndex = 28;
-            this.checkBox_SYNC.Text = "SYNC";
-            this.checkBox_SYNC.UseVisualStyleBackColor = true;
-            // 
-            // checkBox_ManagementData
-            // 
-            this.checkBox_ManagementData.AutoSize = true;
-            this.checkBox_ManagementData.Location = new System.Drawing.Point(168, 75);
-            this.checkBox_ManagementData.Name = "checkBox_ManagementData";
-            this.checkBox_ManagementData.Size = new System.Drawing.Size(111, 17);
-            this.checkBox_ManagementData.TabIndex = 29;
-            this.checkBox_ManagementData.Text = "ManagementData";
-            this.checkBox_ManagementData.UseVisualStyleBackColor = true;
-            // 
             // FrmCPS
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1237, 573);
-            this.Controls.Add(this.checkBox_ManagementData);
-            this.Controls.Add(this.checkBox_SYNC);
+            this.ClientSize = new System.Drawing.Size(1237, 575);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.groupBox_settings);
             this.Controls.Add(this.statusStrip1);
@@ -718,6 +761,10 @@
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.CheckBox checkBox_SYNC;
         private System.Windows.Forms.CheckBox checkBox_ManagementData;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.TextBox textBox_msg_payload_hex;
+        private System.Windows.Forms.CheckBox checkBox_acknowledge;
+        private System.Windows.Forms.Label label_frameLog_answer;
     }
 }
 

@@ -30,6 +30,8 @@ namespace cpsLIB
         //System.Collections.Concurrent.ConcurrentQueue<Frame> _fstackLog = null;
 
         public int TotalFramesFinished = 0; //Frames die auf eine anfrage hin empfangen wurden und verarbeitet werden können
+        public TimeSpan TimeRcvAnswerMin = TimeSpan.MaxValue;
+        public TimeSpan TimeRcvAnswerMax = TimeSpan.MinValue;
  
         //Constructor
         public cmd(IcpsLIB FrmMain)
@@ -47,10 +49,7 @@ namespace cpsLIB
             if (ConnectVerifyState(f, udp_state.connected) || f.GetHeaderFlag(FrameHeaderFlag.SYNC))
             {
                 if (putFrameToStack(f))
-                {
                     _udp_client.send(f);
-                    f.ChangeState(FrameWorkingState.send, "msg from UDPclient to app");
-                }
             }
             else
                 f.ChangeState(FrameWorkingState.error, "Remote udp_state NOT connected - NO Frame is send");
@@ -77,7 +76,6 @@ namespace cpsLIB
             //wenn keine connection gefunden wurde wird eine neue angelegt
             ListConnectStatus.Add(new connectStatus(ip, port));
             ConnectionCheck(ip, port);
-
         }
 
         private bool ConnectVerifyState(Frame f, udp_state matchState)
@@ -131,9 +129,6 @@ namespace cpsLIB
             
             ConnectStateChange(f, udp_state.connected);
 
-            //received frame will be passed to the main application
-            _FrmMain.interprete_frame(f);
-
             //remove frame from "InWork Jobs" 
             if (!_fstack.IsEmpty)
             {
@@ -144,17 +139,31 @@ namespace cpsLIB
                         if (takeFrameFromStack(frameStack))
                         {
                             TotalFramesFinished++;
-                            f.ChangeState(FrameWorkingState.finish, "takeFrameFromStack - drop this one");
+                            frameStack.TimeRcvAnswer = f.TimeCreated - frameStack.TimeCreated;
+                            if (frameStack.TimeRcvAnswer > TimeRcvAnswerMax)
+                                TimeRcvAnswerMax = frameStack.TimeRcvAnswer;
+                            if (frameStack.TimeRcvAnswer < TimeRcvAnswerMin)
+                                TimeRcvAnswerMin = frameStack.TimeRcvAnswer;
+
+                            f.ChangeState(FrameWorkingState.finish, "ack received - drop this one [time: " + frameStack.TimeRcvAnswer.Milliseconds + "]");
                         }
                         else
                             f.ChangeState(FrameWorkingState.error, "ERROR dequeue Frame from stack... ");
 
-                        return;
+                        f.AnswerFrame = frameStack;
+                        break;
                     }
             }
-            f.ChangeState(FrameWorkingState.error, "received udp frame without request...");
-            server_message("received udp frame without request...");
+            else
+            {
+                f.ChangeState(FrameWorkingState.error, "received udp frame without request...");
+                server_message("received udp frame without request...");
+            }
+
+            //received frame will be passed to the main application
+            _FrmMain.interprete_frame(f);
         }
+
         private void ConnectStateChange(Frame f, udp_state state)
         {
             foreach (connectStatus cs in ListConnectStatus)
@@ -191,7 +200,6 @@ namespace cpsLIB
         /// neuen frame für cpu in puffer legen
         /// wenn ein identisches frame (index wird nicht bewertet) 
         /// bereits vorhanden ist wird dieses nicht erneut abgelegt
-        /// sondern in _fstackLog eingereiht
         /// </summary>
         /// <param name="f"></param>
         private bool putFrameToStack(Frame f)

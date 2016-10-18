@@ -23,7 +23,7 @@ namespace cpsLIB
         //private vars
         private static IcpsLIB _FrmMain;
         private udp_server _udp_server;
-        private udp_client _udp_client;
+        //private udp_client _udp_client;
         System.Collections.Concurrent.ConcurrentQueue<Frame> _fstack = null;
 
         private List<CpsClient> ListConnection = new List<CpsClient>();
@@ -40,7 +40,7 @@ namespace cpsLIB
         public CpsNet(IcpsLIB FrmMain)
         {
             _FrmMain = FrmMain;
-            _udp_client = new udp_client();
+            //_udp_client = new udp_client();
             _fstack = new System.Collections.Concurrent.ConcurrentQueue<Frame>();
             //_fstackLog = new System.Collections.Concurrent.ConcurrentQueue<Frame>();
             StackWorker();
@@ -59,7 +59,7 @@ namespace cpsLIB
             if (ConnectVerifyState(f, udp_state.connected) || f.GetHeaderFlag(FrameHeaderFlag.SYNC))
             {
                 if (putFrameToStack(f))
-                    _udp_client.send(f);
+                    f.client.send(f);
             }
             else
                 f.ChangeState(FrameWorkingState.error, "Remote udp_state NOT connected - NO Frame is send");
@@ -69,7 +69,7 @@ namespace cpsLIB
                 _FrmMain.interprete_frame(f);
         }
 
-        public bool ConnectionCheck(CpsClient cc)
+        public bool send_SYNC(CpsClient cc)
         {
             foreach (CpsClient listCC in ListConnection)
             {
@@ -78,7 +78,6 @@ namespace cpsLIB
                     Frame f = new Frame(listCC);
                     f.SetHeaderFlag(FrameHeaderFlag.SYNC);
                     send(f);
-                    //listCC.check_trys++;
                     listCC.state = udp_state.unknown;
                     return true;
                 }
@@ -180,7 +179,7 @@ namespace cpsLIB
         private void ConnectStateChange(Frame f, udp_state state)
         {
             foreach (CpsClient cs in ListConnection)
-                if (cs.IsEqual(f.client)) 
+                if (cs.RemoteIp == f.client.RemoteIp) //hier wichtig das nur die ip verglichen wird. port ist unterschiedlich
                 {
                     cs.state = state;
                     return;
@@ -288,7 +287,7 @@ namespace cpsLIB
                                     f.SendTrys++;
                                     f.LastSendDateTime = DateTime.Now;
                                     f.ChangeState(FrameWorkingState.warning, "repeat send: (" + f.SendTrys.ToString() + ")");
-                                    _udp_client.send(f);
+                                    f.client.send(f);
                                 }
                                 else
                                 {

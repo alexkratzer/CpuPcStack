@@ -87,8 +87,8 @@ namespace cpsLIB
         #region functions 
         public override string ToString()
         {
-            return TimeCreated.ToString("HH:mm:ss:fff") + " (" + frameSender.ToString() + "/" + frameState.ToString() + "/" +
-                ") [" + client.ToString() + "] " + header.ToString();
+            return client.ToString() + " / " + TimeCreated.ToString("ss:fff") + " (" + frameSender.ToString() + "/" + frameState.ToString() + "/" +
+                ")  " + header.ToString();
         }
 
         private byte[] changeEndian(byte[] data)

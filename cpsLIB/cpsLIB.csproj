@@ -41,10 +41,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CpsClient.cs" />
     <Compile Include="frame.cs" />
     <Compile Include="IcpsLIB.cs" />
     <Compile Include="log.cs" />
-    <Compile Include="cmd.cs" />
+    <Compile Include="CpsNet.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="udp_client.cs" />
     <Compile Include="udp_server.cs" />

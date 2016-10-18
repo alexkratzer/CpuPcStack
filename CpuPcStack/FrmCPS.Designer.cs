@@ -31,6 +31,8 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FrmCPS));
             this.label_ip = new System.Windows.Forms.Label();
             this.groupBox_client = new System.Windows.Forms.GroupBox();
+            this.comboBox_listClients = new System.Windows.Forms.ComboBox();
+            this.button_newClient = new System.Windows.Forms.Button();
             this.label_host_name_desc = new System.Windows.Forms.Label();
             this.label_srv_port = new System.Windows.Forms.Label();
             this.textBox_remotePort = new System.Windows.Forms.TextBox();
@@ -47,7 +49,6 @@
             this.label_payload_byte = new System.Windows.Forms.Label();
             this.textBox_msg_payload_ASCII = new System.Windows.Forms.TextBox();
             this.textBox_msg_payload_byte = new System.Windows.Forms.TextBox();
-            this.checkBox_receive_big_endian = new System.Windows.Forms.CheckBox();
             this.checkBox_send_big_endian = new System.Windows.Forms.CheckBox();
             this.groupBox_send_msg = new System.Windows.Forms.GroupBox();
             this.checkBox_ManagementData = new System.Windows.Forms.CheckBox();
@@ -55,12 +56,12 @@
             this.button_send_repeat = new System.Windows.Forms.Button();
             this.checkBox_SYNC = new System.Windows.Forms.CheckBox();
             this.label_send_times = new System.Windows.Forms.Label();
-            this.button_check = new System.Windows.Forms.Button();
             this.label_cyclic_desc = new System.Windows.Forms.Label();
             this.checkBox_cyclic = new System.Windows.Forms.CheckBox();
             this.textBox_timer_interval = new System.Windows.Forms.TextBox();
             this.label_repeat = new System.Windows.Forms.Label();
             this.textBox_send_multiplikator = new System.Windows.Forms.TextBox();
+            this.button_check = new System.Windows.Forms.Button();
             this.radioButton_send_ascii = new System.Windows.Forms.RadioButton();
             this.radioButton_send_byte = new System.Windows.Forms.RadioButton();
             this.label1 = new System.Windows.Forms.Label();
@@ -87,7 +88,8 @@
             this.label_WATCHDOG_WORK = new System.Windows.Forms.Label();
             this.textBox_MaxSYNCResendTrys = new System.Windows.Forms.TextBox();
             this.label_MaxSYNCResendTrys_desc = new System.Windows.Forms.Label();
-            this.button1 = new System.Windows.Forms.Button();
+            this.button_set_time = new System.Windows.Forms.Button();
+            this.button_get_time = new System.Windows.Forms.Button();
             this.groupBox_client.SuspendLayout();
             this.groupBox_send_msg.SuspendLayout();
             this.groupBox_status.SuspendLayout();
@@ -107,6 +109,8 @@
             // 
             // groupBox_client
             // 
+            this.groupBox_client.Controls.Add(this.comboBox_listClients);
+            this.groupBox_client.Controls.Add(this.button_newClient);
             this.groupBox_client.Controls.Add(this.label_host_name_desc);
             this.groupBox_client.Controls.Add(this.label_srv_port);
             this.groupBox_client.Controls.Add(this.textBox_remotePort);
@@ -116,12 +120,30 @@
             this.groupBox_client.Controls.Add(this.label_port);
             this.groupBox_client.Controls.Add(this.textBox_remote_ip);
             this.groupBox_client.Controls.Add(this.label_ip);
-            this.groupBox_client.Location = new System.Drawing.Point(12, 105);
+            this.groupBox_client.Location = new System.Drawing.Point(12, 75);
             this.groupBox_client.Name = "groupBox_client";
-            this.groupBox_client.Size = new System.Drawing.Size(313, 96);
+            this.groupBox_client.Size = new System.Drawing.Size(313, 126);
             this.groupBox_client.TabIndex = 1;
             this.groupBox_client.TabStop = false;
             this.groupBox_client.Text = "remote";
+            // 
+            // comboBox_listClients
+            // 
+            this.comboBox_listClients.FormattingEnabled = true;
+            this.comboBox_listClients.Location = new System.Drawing.Point(9, 94);
+            this.comboBox_listClients.Name = "comboBox_listClients";
+            this.comboBox_listClients.Size = new System.Drawing.Size(121, 21);
+            this.comboBox_listClients.TabIndex = 18;
+            // 
+            // button_newClient
+            // 
+            this.button_newClient.Location = new System.Drawing.Point(9, 65);
+            this.button_newClient.Name = "button_newClient";
+            this.button_newClient.Size = new System.Drawing.Size(113, 23);
+            this.button_newClient.TabIndex = 17;
+            this.button_newClient.Text = "make new client";
+            this.button_newClient.UseVisualStyleBackColor = true;
+            this.button_newClient.Click += new System.EventHandler(this.button_newClient_Click);
             // 
             // label_host_name_desc
             // 
@@ -258,25 +280,14 @@
             this.textBox_msg_payload_byte.Size = new System.Drawing.Size(335, 20);
             this.textBox_msg_payload_byte.TabIndex = 12;
             // 
-            // checkBox_receive_big_endian
-            // 
-            this.checkBox_receive_big_endian.AutoSize = true;
-            this.checkBox_receive_big_endian.Location = new System.Drawing.Point(9, 37);
-            this.checkBox_receive_big_endian.Name = "checkBox_receive_big_endian";
-            this.checkBox_receive_big_endian.Size = new System.Drawing.Size(112, 17);
-            this.checkBox_receive_big_endian.TabIndex = 12;
-            this.checkBox_receive_big_endian.Text = "receive BigEndian";
-            this.checkBox_receive_big_endian.UseVisualStyleBackColor = true;
-            this.checkBox_receive_big_endian.CheckedChanged += new System.EventHandler(this.checkBox_receive_big_endian_CheckedChanged);
-            // 
             // checkBox_send_big_endian
             // 
             this.checkBox_send_big_endian.AutoSize = true;
             this.checkBox_send_big_endian.Location = new System.Drawing.Point(9, 17);
             this.checkBox_send_big_endian.Name = "checkBox_send_big_endian";
-            this.checkBox_send_big_endian.Size = new System.Drawing.Size(100, 17);
+            this.checkBox_send_big_endian.Size = new System.Drawing.Size(124, 17);
             this.checkBox_send_big_endian.TabIndex = 11;
-            this.checkBox_send_big_endian.Text = "send BigEndian";
+            this.checkBox_send_big_endian.Text = "Remote is BigEndian";
             this.checkBox_send_big_endian.UseVisualStyleBackColor = true;
             this.checkBox_send_big_endian.CheckedChanged += new System.EventHandler(this.checkBox_big_endian_CheckedChanged);
             // 
@@ -289,7 +300,6 @@
             this.groupBox_send_msg.Controls.Add(this.checkBox_SYNC);
             this.groupBox_send_msg.Controls.Add(this.label_send_times);
             this.groupBox_send_msg.Controls.Add(this.textBox_send);
-            this.groupBox_send_msg.Controls.Add(this.button_check);
             this.groupBox_send_msg.Controls.Add(this.label_cyclic_desc);
             this.groupBox_send_msg.Controls.Add(this.checkBox_cyclic);
             this.groupBox_send_msg.Controls.Add(this.textBox_timer_interval);
@@ -297,7 +307,7 @@
             this.groupBox_send_msg.Controls.Add(this.textBox_send_multiplikator);
             this.groupBox_send_msg.Location = new System.Drawing.Point(12, 207);
             this.groupBox_send_msg.Name = "groupBox_send_msg";
-            this.groupBox_send_msg.Size = new System.Drawing.Size(313, 166);
+            this.groupBox_send_msg.Size = new System.Drawing.Size(313, 132);
             this.groupBox_send_msg.TabIndex = 18;
             this.groupBox_send_msg.TabStop = false;
             this.groupBox_send_msg.Text = "send message";
@@ -324,7 +334,7 @@
             // 
             // button_send_repeat
             // 
-            this.button_send_repeat.Location = new System.Drawing.Point(177, 130);
+            this.button_send_repeat.Location = new System.Drawing.Point(177, 96);
             this.button_send_repeat.Name = "button_send_repeat";
             this.button_send_repeat.Size = new System.Drawing.Size(75, 23);
             this.button_send_repeat.TabIndex = 28;
@@ -345,26 +355,16 @@
             // label_send_times
             // 
             this.label_send_times.AutoSize = true;
-            this.label_send_times.Location = new System.Drawing.Point(91, 136);
+            this.label_send_times.Location = new System.Drawing.Point(91, 102);
             this.label_send_times.Name = "label_send_times";
             this.label_send_times.Size = new System.Drawing.Size(80, 13);
             this.label_send_times.TabIndex = 27;
             this.label_send_times.Text = "Frames at once";
             // 
-            // button_check
-            // 
-            this.button_check.Location = new System.Drawing.Point(9, 97);
-            this.button_check.Name = "button_check";
-            this.button_check.Size = new System.Drawing.Size(112, 23);
-            this.button_check.TabIndex = 26;
-            this.button_check.Text = "check conection";
-            this.button_check.UseVisualStyleBackColor = true;
-            this.button_check.Click += new System.EventHandler(this.button_check_Click);
-            // 
             // label_cyclic_desc
             // 
             this.label_cyclic_desc.AutoSize = true;
-            this.label_cyclic_desc.Location = new System.Drawing.Point(226, 102);
+            this.label_cyclic_desc.Location = new System.Drawing.Point(232, 23);
             this.label_cyclic_desc.Name = "label_cyclic_desc";
             this.label_cyclic_desc.Size = new System.Drawing.Size(20, 13);
             this.label_cyclic_desc.TabIndex = 25;
@@ -373,7 +373,7 @@
             // checkBox_cyclic
             // 
             this.checkBox_cyclic.AutoSize = true;
-            this.checkBox_cyclic.Location = new System.Drawing.Point(248, 101);
+            this.checkBox_cyclic.Location = new System.Drawing.Point(254, 22);
             this.checkBox_cyclic.Name = "checkBox_cyclic";
             this.checkBox_cyclic.Size = new System.Drawing.Size(53, 17);
             this.checkBox_cyclic.TabIndex = 24;
@@ -383,7 +383,7 @@
             // 
             // textBox_timer_interval
             // 
-            this.textBox_timer_interval.Location = new System.Drawing.Point(183, 99);
+            this.textBox_timer_interval.Location = new System.Drawing.Point(189, 20);
             this.textBox_timer_interval.Name = "textBox_timer_interval";
             this.textBox_timer_interval.Size = new System.Drawing.Size(37, 20);
             this.textBox_timer_interval.TabIndex = 23;
@@ -392,7 +392,7 @@
             // label_repeat
             // 
             this.label_repeat.AutoSize = true;
-            this.label_repeat.Location = new System.Drawing.Point(11, 137);
+            this.label_repeat.Location = new System.Drawing.Point(11, 103);
             this.label_repeat.Name = "label_repeat";
             this.label_repeat.Size = new System.Drawing.Size(33, 13);
             this.label_repeat.TabIndex = 22;
@@ -400,11 +400,21 @@
             // 
             // textBox_send_multiplikator
             // 
-            this.textBox_send_multiplikator.Location = new System.Drawing.Point(50, 133);
+            this.textBox_send_multiplikator.Location = new System.Drawing.Point(50, 99);
             this.textBox_send_multiplikator.Name = "textBox_send_multiplikator";
             this.textBox_send_multiplikator.Size = new System.Drawing.Size(31, 20);
             this.textBox_send_multiplikator.TabIndex = 21;
             this.textBox_send_multiplikator.Text = "1";
+            // 
+            // button_check
+            // 
+            this.button_check.Location = new System.Drawing.Point(331, 489);
+            this.button_check.Name = "button_check";
+            this.button_check.Size = new System.Drawing.Size(102, 23);
+            this.button_check.TabIndex = 26;
+            this.button_check.Text = "check conection";
+            this.button_check.UseVisualStyleBackColor = true;
+            this.button_check.Click += new System.EventHandler(this.button_check_Click);
             // 
             // radioButton_send_ascii
             // 
@@ -595,9 +605,8 @@
             this.groupBox_settings.Controls.Add(this.label_MaxSYNCResendTrys_desc);
             this.groupBox_settings.Controls.Add(this.radioButton_send_ascii);
             this.groupBox_settings.Controls.Add(this.radioButton_send_byte);
-            this.groupBox_settings.Controls.Add(this.checkBox_receive_big_endian);
             this.groupBox_settings.Controls.Add(this.checkBox_send_big_endian);
-            this.groupBox_settings.Location = new System.Drawing.Point(12, 379);
+            this.groupBox_settings.Location = new System.Drawing.Point(12, 345);
             this.groupBox_settings.Name = "groupBox_settings";
             this.groupBox_settings.Size = new System.Drawing.Size(313, 157);
             this.groupBox_settings.TabIndex = 26;
@@ -660,28 +669,40 @@
             this.label_MaxSYNCResendTrys_desc.TabIndex = 15;
             this.label_MaxSYNCResendTrys_desc.Text = "MaxSYNCResendTrys:";
             // 
-            // button1
+            // button_set_time
             // 
-            this.button1.Location = new System.Drawing.Point(353, 495);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(75, 23);
-            this.button1.TabIndex = 27;
-            this.button1.Text = "button1";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            this.button_set_time.Location = new System.Drawing.Point(439, 489);
+            this.button_set_time.Name = "button_set_time";
+            this.button_set_time.Size = new System.Drawing.Size(75, 23);
+            this.button_set_time.TabIndex = 28;
+            this.button_set_time.Text = "set time";
+            this.button_set_time.UseVisualStyleBackColor = true;
+            this.button_set_time.Click += new System.EventHandler(this.button_set_time_Click);
+            // 
+            // button_get_time
+            // 
+            this.button_get_time.Location = new System.Drawing.Point(439, 518);
+            this.button_get_time.Name = "button_get_time";
+            this.button_get_time.Size = new System.Drawing.Size(75, 23);
+            this.button_get_time.TabIndex = 29;
+            this.button_get_time.Text = "get time";
+            this.button_get_time.UseVisualStyleBackColor = true;
+            this.button_get_time.Click += new System.EventHandler(this.button_get_time_Click);
             // 
             // FrmCPS
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1237, 575);
-            this.Controls.Add(this.button1);
+            this.Controls.Add(this.button_get_time);
+            this.Controls.Add(this.button_set_time);
             this.Controls.Add(this.groupBox_settings);
             this.Controls.Add(this.statusStrip1);
             this.Controls.Add(this.groupBox_status);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.groupBox_client);
             this.Controls.Add(this.groupBox_send_msg);
+            this.Controls.Add(this.button_check);
             this.Controls.Add(this.menuStrip_main);
             this.MainMenuStrip = this.menuStrip_main;
             this.Name = "FrmCPS";
@@ -719,7 +740,6 @@
         private System.Windows.Forms.Label label_host_name;
         private System.Windows.Forms.Label label_host_name_desc;
         private System.Windows.Forms.CheckBox checkBox_send_big_endian;
-        private System.Windows.Forms.CheckBox checkBox_receive_big_endian;
         private System.Windows.Forms.GroupBox groupBox_send_msg;
         private System.Windows.Forms.TextBox textBox_msg_payload_byte;
         private System.Windows.Forms.TextBox textBox_msg_payload_ASCII;
@@ -758,13 +778,16 @@
         private System.Windows.Forms.CheckBox checkBox_SendFramesCallback;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripMenuItem statusToolStripMenuItem;
-        private System.Windows.Forms.Button button1;
         private System.Windows.Forms.CheckBox checkBox_SYNC;
         private System.Windows.Forms.CheckBox checkBox_ManagementData;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.TextBox textBox_msg_payload_hex;
         private System.Windows.Forms.CheckBox checkBox_acknowledge;
         private System.Windows.Forms.Label label_frameLog_answer;
+        private System.Windows.Forms.Button button_set_time;
+        private System.Windows.Forms.Button button_get_time;
+        private System.Windows.Forms.Button button_newClient;
+        private System.Windows.Forms.ComboBox comboBox_listClients;
     }
 }
 

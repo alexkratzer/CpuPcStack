@@ -32,8 +32,8 @@ namespace cpsLIB
             UdpClient udpClient = new UdpClient();
             try
             {
-                f.ChangeState(FrameWorkingState.send, "send udp frame @: " + f.RemoteIp + ":" +  f.RemotePort);
-                udpClient.Send(f.GetByteArray(), f.GetByteArray().Length, f.RemoteIp, f.RemotePort);
+                f.ChangeState(FrameWorkingState.send, "send udp frame @: " + f.client);
+                udpClient.Send(f.GetByteArray(), f.GetByteArray().Length, f.client.RemoteIp, f.client.RemotePort);
                 udpClient.Close();
             }
             catch (Exception e) {

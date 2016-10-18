@@ -12,29 +12,32 @@ namespace cpsLIB
     
     public enum udp_state { unknown, connected, disconnected, error }
     //public enum msg_type { undef, info, warning, error }
-    public class cmd
+    public class CpsNet
     {
+        //flags to control all connections
         public Int16 MaxSYNCResendTrys = 3; //Anzahl der erlaubten Wiederholungen bei SYNC Telegram
         public Int16 WATCHDOG_WORK = 2000; //Erlaubte Zeitdauer in ms bis PLC geantwortet haben muss
         public bool SendFramesCallback = true; //es werden die "zu sendenden frames" als callback zurückgeliefert
         public bool SendOnlyIfConnected = false;
 
-        public static IcpsLIB _FrmMain;
+        //private vars
+        private static IcpsLIB _FrmMain;
         private udp_server _udp_server;
         private udp_client _udp_client;
         System.Collections.Concurrent.ConcurrentQueue<Frame> _fstack = null;
 
-        private List<connectStatus> ListConnectStatus = new List<connectStatus>();
+        private List<CpsClient> ListConnection = new List<CpsClient>();
 
         //TODO: alle frames in liste speichern
         //System.Collections.Concurrent.ConcurrentQueue<Frame> _fstackLog = null;
 
+        //connection parameter
         public int TotalFramesFinished = 0; //Frames die auf eine anfrage hin empfangen wurden und verarbeitet werden können
         public TimeSpan TimeRcvAnswerMin = TimeSpan.MaxValue;
         public TimeSpan TimeRcvAnswerMax = TimeSpan.MinValue;
  
         //Constructor
-        public cmd(IcpsLIB FrmMain)
+        public CpsNet(IcpsLIB FrmMain)
         {
             _FrmMain = FrmMain;
             _udp_client = new udp_client();
@@ -44,6 +47,13 @@ namespace cpsLIB
         }
   
         #region client
+        public object newClient(string ip, string port)
+        { 
+                CpsClient client = new CpsClient(ip, port);
+                ListConnection.Add(client);
+                return client;
+        }
+
         public void send(Frame f)
         {
             if (ConnectVerifyState(f, udp_state.connected) || f.GetHeaderFlag(FrameHeaderFlag.SYNC))
@@ -59,34 +69,37 @@ namespace cpsLIB
                 _FrmMain.interprete_frame(f);
         }
 
-        public void ConnectionCheck(string ip, string port)
+        public bool ConnectionCheck(CpsClient cc)
         {
-            foreach (connectStatus cs in ListConnectStatus)
+            foreach (CpsClient listCC in ListConnection)
             {
-                if (cs.ip.Equals(ip) && cs.sport == port)
+                if (listCC.IsEqual(cc))
                 {
-                    Frame f = new Frame(ip, port.ToString());
+                    Frame f = new Frame(listCC);
                     f.SetHeaderFlag(FrameHeaderFlag.SYNC);
                     send(f);
-                    cs.check_trys++;
-                    cs.state = udp_state.unknown;
-                    return;
+                    //listCC.check_trys++;
+                    listCC.state = udp_state.unknown;
+                    return true;
                 }
             }
+            return false;
             //wenn keine connection gefunden wurde wird eine neue angelegt
-            ListConnectStatus.Add(new connectStatus(ip, port));
-            ConnectionCheck(ip, port);
+            //TODO - jetzt wahrscheinlich überflüssig da schon eine gültige connection übergeben wird
+            //ListConnection.Add(new CpsClient(ip, port));
+            //ConnectionCheck(ip, port);
         }
 
         private bool ConnectVerifyState(Frame f, udp_state matchState)
         {
             if (SendOnlyIfConnected)
             {
-                if (ListConnectStatus.Count > 0)
+                if (ListConnection.Count > 0)
                 {
-                    foreach (connectStatus cs in ListConnectStatus)
+                    foreach (CpsClient cs in ListConnection)
                     {
-                        if (cs.ip.Equals(f.RemoteIp) && cs.iport == f.RemotePort)
+                        if(cs.IsEqual(f.client))
+                        //if (cs.ip.Equals(f.RemoteIp) && cs.iport == f.RemotePort)
                         {
                             f.ChangeState(FrameWorkingState.inWork, "ConnectVerifyState (Soll: " + matchState + " / IST: " +cs.state + ")" );
                             if (cs.state == matchState)
@@ -150,7 +163,7 @@ namespace cpsLIB
                         else
                             f.ChangeState(FrameWorkingState.error, "ERROR dequeue Frame from stack... ");
 
-                        f.AnswerFrame = frameStack;
+                        frameStack.AnswerFrame = f;
                         break;
                     }
             }
@@ -166,14 +179,15 @@ namespace cpsLIB
 
         private void ConnectStateChange(Frame f, udp_state state)
         {
-            foreach (connectStatus cs in ListConnectStatus)
-                if (cs.ip.Equals(f.RemoteIp)) //Sende und Remote Port sind unterschiedlich -> cs.iport == f.RemotePort
+            foreach (CpsClient cs in ListConnection)
+                if (cs.IsEqual(f.client)) 
                 {
                     cs.state = state;
                     return;
                 }
+
             //wenn keine connection zu dem frame gefunden wurde wird fehler gemeldet
-            f.ChangeState(FrameWorkingState.warning, "no connection found to frame with IP: " + f.RemoteIp);
+            f.ChangeState(FrameWorkingState.warning, "no connection found to: " + f.client);
         }
 
         #endregion
@@ -204,17 +218,20 @@ namespace cpsLIB
         /// <param name="f"></param>
         private bool putFrameToStack(Frame f)
         {
-            if (!_fstack.IsEmpty)
-                foreach (Frame frame in _fstack)
-                {
-                    if (frame.isEqualExeptIndex_WASTE(f))
-                    {
-                        f.ChangeState(FrameWorkingState.error, "Frame already in send buffer");
-                        //_fstackLog.Enqueue(f);
-                        Thread.Sleep(100);
-                        return false;
-                    }
-                }
+            /// funktionalität entfernt -> wenn benötigt muss im frame header der index maskiert werden
+
+            //if (!_fstack.IsEmpty)
+            //    foreach (Frame frame in _fstack)
+            //    {
+            //        if ( (frame.getPayload() == f.getPayload()) && (f.heaheader.Equals(f.header))
+            //        //if (frame.isEqualExeptIndex_WASTE(f))
+            //        {
+            //            f.ChangeState(FrameWorkingState.error, "Frame already in send buffer");
+                        
+            //            Thread.Sleep(100);
+            //            return false;
+            //        }
+            //    }
 
             f.ChangeState(FrameWorkingState.inWork, "Frame put to Stack");
             _fstack.Enqueue(f);
@@ -299,20 +316,6 @@ namespace cpsLIB
         }
         #endregion
 
-        class connectStatus
-        {
-            public Int16 check_trys = 0;
-            public string ip="";
-            public int iport;
-            public string sport;
-            public udp_state state;
-            public connectStatus(string ip, string port) { 
-                this.ip = ip;
-                sport = port;
-                int.TryParse(port, out iport);
-                
-                state = udp_state.unknown;
-            }
-        }
+
     }
 }

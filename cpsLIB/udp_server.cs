@@ -10,13 +10,13 @@ namespace cpsLIB
 {
     class udp_server
     {
-        cmd _sender;
+        CpsNet _sender;
         Thread _srvThread;
         UdpClient listener = null;
         int _srvPort;
         private volatile bool listening;
 
-        public udp_server(cmd FrmMain, string port)
+        public udp_server(CpsNet FrmMain, string port)
         {
             this.listening = false;
             _sender = FrmMain;
@@ -71,7 +71,7 @@ namespace cpsLIB
                             _sender.server_message(groupEP.Address.ToString() + ":" + groupEP.Port.ToString() + 
                                 "udp_server receive ########### EMPTY MESSAGE ################# ");
 
-                        Frame f = new Frame(groupEP.Address.ToString(), groupEP.Port.ToString(), bytes );
+                        Frame f = new Frame(new CpsClient(groupEP.Address.ToString(), groupEP.Port.ToString()), bytes );
                         f.ChangeState(FrameWorkingState.received, "udp server received new frame");
                         _sender.receive(f);
                     }

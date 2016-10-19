@@ -92,6 +92,7 @@
             this.button_get_time = new System.Windows.Forms.Button();
             this.panel_frame_content = new System.Windows.Forms.Panel();
             this.button_refresh_clientFrameLog = new System.Windows.Forms.Button();
+            this.checkBox_PdataIO = new System.Windows.Forms.CheckBox();
             this.groupBox_client.SuspendLayout();
             this.groupBox_send_msg.SuspendLayout();
             this.menuStrip_main.SuspendLayout();
@@ -210,19 +211,20 @@
             // listBox_clientFrameLog
             // 
             this.listBox_clientFrameLog.FormattingEnabled = true;
-            this.listBox_clientFrameLog.Location = new System.Drawing.Point(369, 66);
+            this.listBox_clientFrameLog.Location = new System.Drawing.Point(490, 193);
             this.listBox_clientFrameLog.Name = "listBox_clientFrameLog";
-            this.listBox_clientFrameLog.Size = new System.Drawing.Size(371, 420);
+            this.listBox_clientFrameLog.Size = new System.Drawing.Size(371, 199);
             this.listBox_clientFrameLog.TabIndex = 29;
             this.listBox_clientFrameLog.SelectedIndexChanged += new System.EventHandler(this.listBox_clientFrameLog_SelectedIndexChanged);
             // 
             // comboBox_listClients
             // 
             this.comboBox_listClients.FormattingEnabled = true;
-            this.comboBox_listClients.Location = new System.Drawing.Point(369, 40);
+            this.comboBox_listClients.Location = new System.Drawing.Point(490, 167);
             this.comboBox_listClients.Name = "comboBox_listClients";
             this.comboBox_listClients.Size = new System.Drawing.Size(233, 21);
             this.comboBox_listClients.TabIndex = 18;
+            this.comboBox_listClients.SelectedIndexChanged += new System.EventHandler(this.comboBox_listClients_SelectedIndexChanged);
             // 
             // textBox_send
             // 
@@ -303,6 +305,7 @@
             // 
             // groupBox_send_msg
             // 
+            this.groupBox_send_msg.Controls.Add(this.checkBox_PdataIO);
             this.groupBox_send_msg.Controls.Add(this.checkBox_ManagementData);
             this.groupBox_send_msg.Controls.Add(this.checkBox_acknowledge);
             this.groupBox_send_msg.Controls.Add(this.button_send_repeat);
@@ -315,9 +318,9 @@
             this.groupBox_send_msg.Controls.Add(this.textBox_timer_interval);
             this.groupBox_send_msg.Controls.Add(this.label_repeat);
             this.groupBox_send_msg.Controls.Add(this.textBox_send_multiplikator);
-            this.groupBox_send_msg.Location = new System.Drawing.Point(12, 323);
+            this.groupBox_send_msg.Location = new System.Drawing.Point(490, 29);
             this.groupBox_send_msg.Name = "groupBox_send_msg";
-            this.groupBox_send_msg.Size = new System.Drawing.Size(313, 132);
+            this.groupBox_send_msg.Size = new System.Drawing.Size(371, 132);
             this.groupBox_send_msg.TabIndex = 18;
             this.groupBox_send_msg.TabStop = false;
             this.groupBox_send_msg.Text = "send message";
@@ -325,11 +328,11 @@
             // checkBox_ManagementData
             // 
             this.checkBox_ManagementData.AutoSize = true;
-            this.checkBox_ManagementData.Location = new System.Drawing.Point(165, 47);
+            this.checkBox_ManagementData.Location = new System.Drawing.Point(125, 46);
             this.checkBox_ManagementData.Name = "checkBox_ManagementData";
-            this.checkBox_ManagementData.Size = new System.Drawing.Size(111, 17);
+            this.checkBox_ManagementData.Size = new System.Drawing.Size(70, 17);
             this.checkBox_ManagementData.TabIndex = 29;
-            this.checkBox_ManagementData.Text = "ManagementData";
+            this.checkBox_ManagementData.Text = "MngData";
             this.checkBox_ManagementData.UseVisualStyleBackColor = true;
             // 
             // checkBox_acknowledge
@@ -337,9 +340,9 @@
             this.checkBox_acknowledge.AutoSize = true;
             this.checkBox_acknowledge.Location = new System.Drawing.Point(70, 47);
             this.checkBox_acknowledge.Name = "checkBox_acknowledge";
-            this.checkBox_acknowledge.Size = new System.Drawing.Size(90, 17);
+            this.checkBox_acknowledge.Size = new System.Drawing.Size(55, 17);
             this.checkBox_acknowledge.TabIndex = 30;
-            this.checkBox_acknowledge.Text = "acknowledge";
+            this.checkBox_acknowledge.Text = "ACKN";
             this.checkBox_acknowledge.UseVisualStyleBackColor = true;
             // 
             // button_send_repeat
@@ -418,7 +421,7 @@
             // 
             // button_check
             // 
-            this.button_check.Location = new System.Drawing.Point(12, 461);
+            this.button_check.Location = new System.Drawing.Point(596, 398);
             this.button_check.Name = "button_check";
             this.button_check.Size = new System.Drawing.Size(102, 23);
             this.button_check.TabIndex = 26;
@@ -451,7 +454,7 @@
             // label_frameLog_answer
             // 
             this.label_frameLog_answer.AutoSize = true;
-            this.label_frameLog_answer.Location = new System.Drawing.Point(19, 255);
+            this.label_frameLog_answer.Location = new System.Drawing.Point(19, 211);
             this.label_frameLog_answer.Name = "label_frameLog_answer";
             this.label_frameLog_answer.Size = new System.Drawing.Size(119, 13);
             this.label_frameLog_answer.TabIndex = 28;
@@ -494,9 +497,9 @@
             // listBox_frameLog
             // 
             this.listBox_frameLog.FormattingEnabled = true;
-            this.listBox_frameLog.Location = new System.Drawing.Point(746, 40);
+            this.listBox_frameLog.Location = new System.Drawing.Point(12, 309);
             this.listBox_frameLog.Name = "listBox_frameLog";
-            this.listBox_frameLog.Size = new System.Drawing.Size(392, 446);
+            this.listBox_frameLog.Size = new System.Drawing.Size(426, 472);
             this.listBox_frameLog.TabIndex = 23;
             this.listBox_frameLog.SelectedIndexChanged += new System.EventHandler(this.listBox_frameLog_SelectedIndexChanged);
             // 
@@ -506,7 +509,7 @@
             this.logFileToolStripMenuItem});
             this.menuStrip_main.Location = new System.Drawing.Point(0, 0);
             this.menuStrip_main.Name = "menuStrip_main";
-            this.menuStrip_main.Size = new System.Drawing.Size(1474, 24);
+            this.menuStrip_main.Size = new System.Drawing.Size(873, 24);
             this.menuStrip_main.TabIndex = 25;
             this.menuStrip_main.Text = "menuStrip1";
             // 
@@ -523,9 +526,9 @@
             this.toolStripDropDownButton1,
             this.tssl_server_status,
             this.tSSl_connection_status});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 502);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 801);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(1474, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(873, 22);
             this.statusStrip1.TabIndex = 26;
             this.statusStrip1.Text = "statusStrip1";
             // 
@@ -593,7 +596,7 @@
             this.groupBox_settings.Controls.Add(this.radioButton_send_ascii);
             this.groupBox_settings.Controls.Add(this.radioButton_send_byte);
             this.groupBox_settings.Controls.Add(this.checkBox_send_big_endian);
-            this.groupBox_settings.Location = new System.Drawing.Point(12, 142);
+            this.groupBox_settings.Location = new System.Drawing.Point(12, 139);
             this.groupBox_settings.Name = "groupBox_settings";
             this.groupBox_settings.Size = new System.Drawing.Size(313, 157);
             this.groupBox_settings.TabIndex = 26;
@@ -658,7 +661,7 @@
             // 
             // button_set_time
             // 
-            this.button_set_time.Location = new System.Drawing.Point(120, 461);
+            this.button_set_time.Location = new System.Drawing.Point(704, 398);
             this.button_set_time.Name = "button_set_time";
             this.button_set_time.Size = new System.Drawing.Size(75, 23);
             this.button_set_time.TabIndex = 28;
@@ -668,7 +671,7 @@
             // 
             // button_get_time
             // 
-            this.button_get_time.Location = new System.Drawing.Point(201, 461);
+            this.button_get_time.Location = new System.Drawing.Point(785, 398);
             this.button_get_time.Name = "button_get_time";
             this.button_get_time.Size = new System.Drawing.Size(75, 23);
             this.button_get_time.TabIndex = 29;
@@ -689,14 +692,14 @@
             this.panel_frame_content.Controls.Add(this.label2);
             this.panel_frame_content.Controls.Add(this.textBox_msg_payload_int);
             this.panel_frame_content.Controls.Add(this.label_frameLog);
-            this.panel_frame_content.Location = new System.Drawing.Point(1144, 40);
+            this.panel_frame_content.Location = new System.Drawing.Point(490, 457);
             this.panel_frame_content.Name = "panel_frame_content";
-            this.panel_frame_content.Size = new System.Drawing.Size(307, 446);
+            this.panel_frame_content.Size = new System.Drawing.Size(371, 324);
             this.panel_frame_content.TabIndex = 30;
             // 
             // button_refresh_clientFrameLog
             // 
-            this.button_refresh_clientFrameLog.Location = new System.Drawing.Point(665, 40);
+            this.button_refresh_clientFrameLog.Location = new System.Drawing.Point(786, 167);
             this.button_refresh_clientFrameLog.Name = "button_refresh_clientFrameLog";
             this.button_refresh_clientFrameLog.Size = new System.Drawing.Size(75, 23);
             this.button_refresh_clientFrameLog.TabIndex = 31;
@@ -704,11 +707,21 @@
             this.button_refresh_clientFrameLog.UseVisualStyleBackColor = true;
             this.button_refresh_clientFrameLog.Click += new System.EventHandler(this.button_refresh_clientFrameLog_Click);
             // 
+            // checkBox_PdataIO
+            // 
+            this.checkBox_PdataIO.AutoSize = true;
+            this.checkBox_PdataIO.Location = new System.Drawing.Point(201, 47);
+            this.checkBox_PdataIO.Name = "checkBox_PdataIO";
+            this.checkBox_PdataIO.Size = new System.Drawing.Size(65, 17);
+            this.checkBox_PdataIO.TabIndex = 31;
+            this.checkBox_PdataIO.Text = "PdataIO";
+            this.checkBox_PdataIO.UseVisualStyleBackColor = true;
+            // 
             // FrmCPS
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1474, 524);
+            this.ClientSize = new System.Drawing.Size(873, 823);
             this.Controls.Add(this.button_refresh_clientFrameLog);
             this.Controls.Add(this.comboBox_listClients);
             this.Controls.Add(this.listBox_clientFrameLog);
@@ -808,6 +821,7 @@
         private System.Windows.Forms.ListBox listBox_clientFrameLog;
         private System.Windows.Forms.Panel panel_frame_content;
         private System.Windows.Forms.Button button_refresh_clientFrameLog;
+        private System.Windows.Forms.CheckBox checkBox_PdataIO;
     }
 }
 

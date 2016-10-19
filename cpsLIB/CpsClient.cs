@@ -15,6 +15,7 @@ namespace cpsLIB
         public string RemotePortStr;
         public udp_state state;
         public List<Frame> LFrame; //log all frames send over this udp connection
+        public Int16 CountSendFrames = 0;
 
         public CpsClient(string ip, string port)
         {
@@ -48,6 +49,7 @@ namespace cpsLIB
         public void send(Frame f)
         {
             LFrame.Add(f);
+            CountSendFrames++;
             //_clientThread = new Thread(new ThreadStart(send_fkt));
             _clientThread = new Thread(()=> send_fkt(f));
             _clientThread.IsBackground = true;
@@ -59,10 +61,18 @@ namespace cpsLIB
             UdpClient udpClient = new UdpClient();
             try
             {
-                f.ChangeState(FrameWorkingState.send, "send udp frame @: " + f.client);
-                udpClient.Send(f.GetByteArray(), f.GetByteArray().Length, f.client.RemoteIp, f.client.RemotePort);
+                //f.ChangeState(FrameWorkingState.send, "send udp frame @: " + f.client);
+                //udpClient.Send(f.GetByteArray(), f.GetByteArray().Length, f.client.RemoteIp, f.client.RemotePort);
                 //############################################################################################################
+
+
                 //TODO: hier ist f.client nicht mehr notwendig. evtl ist referen von cpsClient in Frame nicht mehr notwendig
+                
+                
+                f.ChangeState(FrameWorkingState.send, "send udp frame @: " + this.ToString());
+                udpClient.Send(f.GetByteArray(), f.GetByteArray().Length, RemoteIp, RemotePort);
+                
+                
                 udpClient.Close();
             }
             catch (Exception e)

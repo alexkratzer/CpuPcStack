@@ -14,7 +14,9 @@ namespace CpuPcStack
     {
         BindingList<FrameRawData> ListFrames = new BindingList<FrameRawData>();
         cpsLIB.CpsNet CpsNet;
-        
+
+        CpsClient selectedClient;
+              
         public FrmCPS()
         {
             CpsNet = new cpsLIB.CpsNet(this);
@@ -106,13 +108,13 @@ namespace CpuPcStack
             DateTime TimeNow = DateTime.Now;
             Frame f = new Frame((CpsClient)comboBox_listClients.SelectedItem, new Int16[] { (Int16)HeaderFlagManagementData.SetTime, 
             (Int16)TimeNow.Year, (Int16)TimeNow.Month, (Int16)TimeNow.Day, (Int16)TimeNow.Hour, (Int16)TimeNow.Minute, (Int16)TimeNow.Second});
-            f.SetHeaderFlag(FrameHeaderFlag.ManagementData);
+            f.SetHeaderFlag(FrameHeaderFlag.MngData);
             CpsNet.send(f);
         }
         private void button_get_time_Click(object sender, EventArgs e)
         {
             Frame f = new Frame((CpsClient)comboBox_listClients.SelectedItem, new Int16[] { (Int16)HeaderFlagManagementData.GetTime });
-            f.SetHeaderFlag(FrameHeaderFlag.ManagementData);
+            f.SetHeaderFlag(FrameHeaderFlag.MngData);
             CpsNet.send(f);
         }
         #endregion
@@ -145,9 +147,11 @@ namespace CpuPcStack
                 if (checkBox_SYNC.Checked)
                     f.SetHeaderFlag(FrameHeaderFlag.SYNC);
                 if (checkBox_ManagementData.Checked)
-                    f.SetHeaderFlag(FrameHeaderFlag.ManagementData);
+                    f.SetHeaderFlag(FrameHeaderFlag.MngData);
                 if (checkBox_acknowledge.Checked)
-                    f.SetHeaderFlag(FrameHeaderFlag.acknowledge);
+                    f.SetHeaderFlag(FrameHeaderFlag.ACKN);
+                if (checkBox_PdataIO.Checked)
+                    f.SetHeaderFlag(FrameHeaderFlag.PdataIO);
                 CpsNet.send(f);
 
                 //string s = "";
@@ -354,9 +358,18 @@ namespace CpuPcStack
         }
         private void TimerUpdateGui_Tick(object sender, EventArgs e)
         {
+            //udp server status in footer
             tSSl_connection_status.Text = "[Frame min: " + CpsNet.TimeRcvAnswerMin.Milliseconds.ToString() + "ms max: " +
                 CpsNet.TimeRcvAnswerMax.Milliseconds.ToString() + "ms @work: " + CpsNet.InWorkFrameCount() + " done: " +
-                CpsNet.TotalFramesFinished.ToString() + " send: " + Frame.GetCountSendFrames() + " received: " + Frame.GetCountRcvFrames() + "]";
+                CpsNet.TotalFramesFinished.ToString() + /*" send: " + Frame.GetCountSendFrames() + */" received: " + Frame.GetCountRcvFrames() + "]";
+            
+            //update new send frames @client connection
+            if (selectedClient.LFrame.Count > listBox_clientFrameLog.Items.Count) {
+                listBox_clientFrameLog.Items.Clear();
+                foreach (Frame f in selectedClient.LFrame)
+                    listBox_clientFrameLog.Items.Add(f);
+            }
+
         }
 
         private void TimerStop() {
@@ -438,6 +451,11 @@ namespace CpuPcStack
             {
                 listBox_clientFrameLog.Items.Add(f);
             }
+        }
+
+        private void comboBox_listClients_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            selectedClient = (CpsClient)comboBox_listClients.SelectedItem;
         }
 
       

@@ -14,8 +14,8 @@ namespace cpsLIB
     public enum FrameState { ERROR, IS_OK}
     public enum FrameWorkingState { created, inWork, finish, error, warning, received, send}
 
-    //order of the flags must match with the Remote FrameHeaderFlag
-    public enum FrameHeaderFlag { containering = 0, SYNC, LogMessage, acknowledge, ProcessData_value, ProcessData_param, ManagementData}
+    //order of the flags must match with the Remote FrameHeaderFlag 
+    public enum FrameHeaderFlag { containering = 0, SYNC, LogMessage, ACKN, PdataIO, PdataParam, MngData }
     public enum HeaderFlagManagementData { GetTime = 1, SetTime = 2 } 
 
     public class FrameRawData
@@ -63,7 +63,7 @@ namespace cpsLIB
                     // ++ send Frame to Remote ++
                     //data is only payload, no FrameHeader
                     ChangeState(FrameWorkingState.created, "make new frame to send it later on");
-                    header = new FrameHeader();
+                    header = new FrameHeader(client.CountSendFrames);
                     FramePayloadByte = data;
                 }
                 else if (frameSender.Equals(FrameSender.RCVE)) {
@@ -203,9 +203,6 @@ namespace cpsLIB
             return header.GetHeaderFlag(fhf);
         }
 
-        public static int GetCountSendFrames() {
-            return FrameHeader.SendFramesCount;
-        }
         public static int GetCountRcvFrames() {
             return FrameHeader.RcvFramesCount;
         }
@@ -215,7 +212,7 @@ namespace cpsLIB
         {
             /// Telegram Structure:
             /// 1 byte StructVersion; 1 byte ByteHeaderFlag; 2 byte reserviert; int16 FrameIndex; byte[x] payload
-            public static Int16 SendFramesCount = 0;
+            //public static Int16 SendFramesCount = 0;
             public static Int16 RcvFramesCount = 0;
 
             public const int FrameHeaderByteLength = 6; //Länge des Headers in Byte
@@ -280,9 +277,9 @@ namespace cpsLIB
                     throw new Exception("Exception making FrameHeader: ByteArray.Length < " + FrameHeaderByteLength.ToString());
             }
             //Frame to send at remote
-            public FrameHeader()
+            public FrameHeader(Int16 index)
             {
-                _FrameIndex = SendFramesCount++;
+                _FrameIndex = index;
             }
             #endregion
 
@@ -353,8 +350,6 @@ namespace cpsLIB
    
     public class  Frame : FrameRawData{
         public FrameRawData AnswerFrame = null;
-
-
 
         #region construktor
         /// <summary>

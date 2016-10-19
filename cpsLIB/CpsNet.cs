@@ -17,8 +17,8 @@ namespace cpsLIB
         //flags to control all connections
         public Int16 MaxSYNCResendTrys = 3; //Anzahl der erlaubten Wiederholungen bei SYNC Telegram
         public Int16 WATCHDOG_WORK = 2000; //Erlaubte Zeitdauer in ms bis PLC geantwortet haben muss
-        public bool SendFramesCallback = true; //es werden die "zu sendenden frames" als callback zurückgeliefert
-        public bool SendOnlyIfConnected = false;
+        public bool SendFramesCallback = false; //es werden die "zu sendenden frames" als callback zurückgeliefert
+        public bool SendOnlyIfConnected = false; 
 
         //private vars
         private static IcpsLIB _FrmMain;

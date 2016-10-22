@@ -3,12 +3,35 @@ VERSION : 0.1
    STRUCT
       StructVersion : Byte;
       HeaderFlags : Byte;
-      resI : Byte;
-      resII : Byte;
+      resI : Byte := 16#AF;
+      resII : Byte := 16#FE;
       FrameIndex : Int;
       data : Array[0..511] of Byte;
-      remote_ip : Array[0..3] of USInt;
       frame_length : UInt;
+      remote_addr {OriginalPartName := 'TADDR_Param'; LibVersion := '1.0'} : TADDR_Param;
+   END_STRUCT;
+
+END_TYPE
+
+TYPE "UDT_CPSFrameInt"
+VERSION : 0.1
+   STRUCT
+      StructVersion : Byte;
+      HeaderFlags : Byte;
+      resI : Byte := 16#AF;
+      resII : Byte := 16#FE;
+      FrameIndex : Int;
+      data : Array[0..255] of Int;
+      frame_length : UInt;
+      remote_addr {OriginalPartName := 'TADDR_Param'; LibVersion := '1.0'} : TADDR_Param;
+   END_STRUCT;
+
+END_TYPE
+
+TYPE "UDP_CPSPdataIO"
+VERSION : 0.1
+   STRUCT
+      dumm : Bool;
    END_STRUCT;
 
 END_TYPE

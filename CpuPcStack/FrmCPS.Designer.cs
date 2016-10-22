@@ -31,7 +31,6 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FrmCPS));
             this.label_ip = new System.Windows.Forms.Label();
             this.groupBox_client = new System.Windows.Forms.GroupBox();
-            this.comboBox_listClients = new System.Windows.Forms.ComboBox();
             this.button_newClient = new System.Windows.Forms.Button();
             this.label_host_name_desc = new System.Windows.Forms.Label();
             this.label_srv_port = new System.Windows.Forms.Label();
@@ -41,6 +40,8 @@
             this.label_host_name = new System.Windows.Forms.Label();
             this.label_port = new System.Windows.Forms.Label();
             this.textBox_remote_ip = new System.Windows.Forms.TextBox();
+            this.listBox_clientFrameLog = new System.Windows.Forms.ListBox();
+            this.comboBox_listClients = new System.Windows.Forms.ComboBox();
             this.textBox_send = new System.Windows.Forms.TextBox();
             this.button_send_request = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
@@ -64,8 +65,6 @@
             this.button_check = new System.Windows.Forms.Button();
             this.radioButton_send_ascii = new System.Windows.Forms.RadioButton();
             this.radioButton_send_byte = new System.Windows.Forms.RadioButton();
-            this.label1 = new System.Windows.Forms.Label();
-            this.groupBox_status = new System.Windows.Forms.GroupBox();
             this.label_frameLog_answer = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.textBox_msg_payload_hex = new System.Windows.Forms.TextBox();
@@ -81,6 +80,7 @@
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.statusToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tssl_server_status = new System.Windows.Forms.ToolStripStatusLabel();
+            this.tSSl_connection_status = new System.Windows.Forms.ToolStripStatusLabel();
             this.groupBox_settings = new System.Windows.Forms.GroupBox();
             this.checkBox_SendOnlyIfConnected = new System.Windows.Forms.CheckBox();
             this.checkBox_SendFramesCallback = new System.Windows.Forms.CheckBox();
@@ -90,12 +90,15 @@
             this.label_MaxSYNCResendTrys_desc = new System.Windows.Forms.Label();
             this.button_set_time = new System.Windows.Forms.Button();
             this.button_get_time = new System.Windows.Forms.Button();
+            this.panel_frame_content = new System.Windows.Forms.Panel();
+            this.button_refresh_clientFrameLog = new System.Windows.Forms.Button();
+            this.checkBox_PdataIO = new System.Windows.Forms.CheckBox();
             this.groupBox_client.SuspendLayout();
             this.groupBox_send_msg.SuspendLayout();
-            this.groupBox_status.SuspendLayout();
             this.menuStrip_main.SuspendLayout();
             this.statusStrip1.SuspendLayout();
             this.groupBox_settings.SuspendLayout();
+            this.panel_frame_content.SuspendLayout();
             this.SuspendLayout();
             // 
             // label_ip
@@ -109,7 +112,6 @@
             // 
             // groupBox_client
             // 
-            this.groupBox_client.Controls.Add(this.comboBox_listClients);
             this.groupBox_client.Controls.Add(this.button_newClient);
             this.groupBox_client.Controls.Add(this.label_host_name_desc);
             this.groupBox_client.Controls.Add(this.label_srv_port);
@@ -120,26 +122,18 @@
             this.groupBox_client.Controls.Add(this.label_port);
             this.groupBox_client.Controls.Add(this.textBox_remote_ip);
             this.groupBox_client.Controls.Add(this.label_ip);
-            this.groupBox_client.Location = new System.Drawing.Point(12, 75);
+            this.groupBox_client.Location = new System.Drawing.Point(12, 27);
             this.groupBox_client.Name = "groupBox_client";
-            this.groupBox_client.Size = new System.Drawing.Size(313, 126);
+            this.groupBox_client.Size = new System.Drawing.Size(313, 106);
             this.groupBox_client.TabIndex = 1;
             this.groupBox_client.TabStop = false;
             this.groupBox_client.Text = "remote";
-            // 
-            // comboBox_listClients
-            // 
-            this.comboBox_listClients.FormattingEnabled = true;
-            this.comboBox_listClients.Location = new System.Drawing.Point(9, 94);
-            this.comboBox_listClients.Name = "comboBox_listClients";
-            this.comboBox_listClients.Size = new System.Drawing.Size(121, 21);
-            this.comboBox_listClients.TabIndex = 18;
             // 
             // button_newClient
             // 
             this.button_newClient.Location = new System.Drawing.Point(9, 65);
             this.button_newClient.Name = "button_newClient";
-            this.button_newClient.Size = new System.Drawing.Size(113, 23);
+            this.button_newClient.Size = new System.Drawing.Size(127, 23);
             this.button_newClient.TabIndex = 17;
             this.button_newClient.Text = "make new client";
             this.button_newClient.UseVisualStyleBackColor = true;
@@ -152,7 +146,7 @@
             this.label_host_name_desc.Name = "label_host_name_desc";
             this.label_host_name_desc.Size = new System.Drawing.Size(32, 13);
             this.label_host_name_desc.TabIndex = 16;
-            this.label_host_name_desc.Text = "Host:";
+            this.label_host_name_desc.Text = "local:";
             // 
             // label_srv_port
             // 
@@ -214,6 +208,24 @@
             this.textBox_remote_ip.TabIndex = 1;
             this.textBox_remote_ip.Text = "192.168.1.205";
             // 
+            // listBox_clientFrameLog
+            // 
+            this.listBox_clientFrameLog.FormattingEnabled = true;
+            this.listBox_clientFrameLog.Location = new System.Drawing.Point(490, 193);
+            this.listBox_clientFrameLog.Name = "listBox_clientFrameLog";
+            this.listBox_clientFrameLog.Size = new System.Drawing.Size(371, 199);
+            this.listBox_clientFrameLog.TabIndex = 29;
+            this.listBox_clientFrameLog.SelectedIndexChanged += new System.EventHandler(this.listBox_clientFrameLog_SelectedIndexChanged);
+            // 
+            // comboBox_listClients
+            // 
+            this.comboBox_listClients.FormattingEnabled = true;
+            this.comboBox_listClients.Location = new System.Drawing.Point(490, 167);
+            this.comboBox_listClients.Name = "comboBox_listClients";
+            this.comboBox_listClients.Size = new System.Drawing.Size(233, 21);
+            this.comboBox_listClients.TabIndex = 18;
+            this.comboBox_listClients.SelectedIndexChanged += new System.EventHandler(this.comboBox_listClients_SelectedIndexChanged);
+            // 
             // textBox_send
             // 
             this.textBox_send.Location = new System.Drawing.Point(9, 70);
@@ -226,7 +238,7 @@
             // 
             this.button_send_request.Location = new System.Drawing.Point(5, 18);
             this.button_send_request.Name = "button_send_request";
-            this.button_send_request.Size = new System.Drawing.Size(112, 23);
+            this.button_send_request.Size = new System.Drawing.Size(166, 23);
             this.button_send_request.TabIndex = 11;
             this.button_send_request.Text = "send";
             this.button_send_request.UseVisualStyleBackColor = true;
@@ -235,7 +247,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(476, 89);
+            this.label2.Location = new System.Drawing.Point(19, 76);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(61, 13);
             this.label2.TabIndex = 17;
@@ -243,15 +255,15 @@
             // 
             // textBox_msg_payload_int
             // 
-            this.textBox_msg_payload_int.Location = new System.Drawing.Point(553, 86);
+            this.textBox_msg_payload_int.Location = new System.Drawing.Point(96, 73);
             this.textBox_msg_payload_int.Name = "textBox_msg_payload_int";
-            this.textBox_msg_payload_int.Size = new System.Drawing.Size(335, 20);
+            this.textBox_msg_payload_int.Size = new System.Drawing.Size(177, 20);
             this.textBox_msg_payload_int.TabIndex = 16;
             // 
             // label_payload_ascii
             // 
             this.label_payload_ascii.AutoSize = true;
-            this.label_payload_ascii.Location = new System.Drawing.Point(475, 115);
+            this.label_payload_ascii.Location = new System.Drawing.Point(18, 102);
             this.label_payload_ascii.Name = "label_payload_ascii";
             this.label_payload_ascii.Size = new System.Drawing.Size(71, 13);
             this.label_payload_ascii.TabIndex = 15;
@@ -260,7 +272,7 @@
             // label_payload_byte
             // 
             this.label_payload_byte.AutoSize = true;
-            this.label_payload_byte.Location = new System.Drawing.Point(476, 39);
+            this.label_payload_byte.Location = new System.Drawing.Point(19, 26);
             this.label_payload_byte.Name = "label_payload_byte";
             this.label_payload_byte.Size = new System.Drawing.Size(70, 13);
             this.label_payload_byte.TabIndex = 14;
@@ -268,16 +280,16 @@
             // 
             // textBox_msg_payload_ASCII
             // 
-            this.textBox_msg_payload_ASCII.Location = new System.Drawing.Point(553, 112);
+            this.textBox_msg_payload_ASCII.Location = new System.Drawing.Point(96, 99);
             this.textBox_msg_payload_ASCII.Name = "textBox_msg_payload_ASCII";
-            this.textBox_msg_payload_ASCII.Size = new System.Drawing.Size(335, 20);
+            this.textBox_msg_payload_ASCII.Size = new System.Drawing.Size(177, 20);
             this.textBox_msg_payload_ASCII.TabIndex = 13;
             // 
             // textBox_msg_payload_byte
             // 
-            this.textBox_msg_payload_byte.Location = new System.Drawing.Point(553, 36);
+            this.textBox_msg_payload_byte.Location = new System.Drawing.Point(96, 23);
             this.textBox_msg_payload_byte.Name = "textBox_msg_payload_byte";
-            this.textBox_msg_payload_byte.Size = new System.Drawing.Size(335, 20);
+            this.textBox_msg_payload_byte.Size = new System.Drawing.Size(177, 20);
             this.textBox_msg_payload_byte.TabIndex = 12;
             // 
             // checkBox_send_big_endian
@@ -293,6 +305,7 @@
             // 
             // groupBox_send_msg
             // 
+            this.groupBox_send_msg.Controls.Add(this.checkBox_PdataIO);
             this.groupBox_send_msg.Controls.Add(this.checkBox_ManagementData);
             this.groupBox_send_msg.Controls.Add(this.checkBox_acknowledge);
             this.groupBox_send_msg.Controls.Add(this.button_send_repeat);
@@ -305,9 +318,9 @@
             this.groupBox_send_msg.Controls.Add(this.textBox_timer_interval);
             this.groupBox_send_msg.Controls.Add(this.label_repeat);
             this.groupBox_send_msg.Controls.Add(this.textBox_send_multiplikator);
-            this.groupBox_send_msg.Location = new System.Drawing.Point(12, 207);
+            this.groupBox_send_msg.Location = new System.Drawing.Point(490, 29);
             this.groupBox_send_msg.Name = "groupBox_send_msg";
-            this.groupBox_send_msg.Size = new System.Drawing.Size(313, 132);
+            this.groupBox_send_msg.Size = new System.Drawing.Size(371, 132);
             this.groupBox_send_msg.TabIndex = 18;
             this.groupBox_send_msg.TabStop = false;
             this.groupBox_send_msg.Text = "send message";
@@ -315,11 +328,11 @@
             // checkBox_ManagementData
             // 
             this.checkBox_ManagementData.AutoSize = true;
-            this.checkBox_ManagementData.Location = new System.Drawing.Point(165, 47);
+            this.checkBox_ManagementData.Location = new System.Drawing.Point(125, 46);
             this.checkBox_ManagementData.Name = "checkBox_ManagementData";
-            this.checkBox_ManagementData.Size = new System.Drawing.Size(111, 17);
+            this.checkBox_ManagementData.Size = new System.Drawing.Size(70, 17);
             this.checkBox_ManagementData.TabIndex = 29;
-            this.checkBox_ManagementData.Text = "ManagementData";
+            this.checkBox_ManagementData.Text = "MngData";
             this.checkBox_ManagementData.UseVisualStyleBackColor = true;
             // 
             // checkBox_acknowledge
@@ -327,9 +340,9 @@
             this.checkBox_acknowledge.AutoSize = true;
             this.checkBox_acknowledge.Location = new System.Drawing.Point(70, 47);
             this.checkBox_acknowledge.Name = "checkBox_acknowledge";
-            this.checkBox_acknowledge.Size = new System.Drawing.Size(90, 17);
+            this.checkBox_acknowledge.Size = new System.Drawing.Size(55, 17);
             this.checkBox_acknowledge.TabIndex = 30;
-            this.checkBox_acknowledge.Text = "acknowledge";
+            this.checkBox_acknowledge.Text = "ACKN";
             this.checkBox_acknowledge.UseVisualStyleBackColor = true;
             // 
             // button_send_repeat
@@ -408,7 +421,7 @@
             // 
             // button_check
             // 
-            this.button_check.Location = new System.Drawing.Point(331, 489);
+            this.button_check.Location = new System.Drawing.Point(596, 398);
             this.button_check.Name = "button_check";
             this.button_check.Size = new System.Drawing.Size(102, 23);
             this.button_check.TabIndex = 26;
@@ -438,40 +451,10 @@
             this.radioButton_send_byte.Text = "send byte array";
             this.radioButton_send_byte.UseVisualStyleBackColor = true;
             // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(9, 28);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(35, 13);
-            this.label1.TabIndex = 21;
-            this.label1.Text = "label1";
-            // 
-            // groupBox_status
-            // 
-            this.groupBox_status.Controls.Add(this.label_frameLog_answer);
-            this.groupBox_status.Controls.Add(this.label3);
-            this.groupBox_status.Controls.Add(this.textBox_msg_payload_hex);
-            this.groupBox_status.Controls.Add(this.label_frameMetadata);
-            this.groupBox_status.Controls.Add(this.label2);
-            this.groupBox_status.Controls.Add(this.label_frameLog);
-            this.groupBox_status.Controls.Add(this.textBox_msg_payload_int);
-            this.groupBox_status.Controls.Add(this.listBox_frameLog);
-            this.groupBox_status.Controls.Add(this.label_payload_ascii);
-            this.groupBox_status.Controls.Add(this.label_payload_byte);
-            this.groupBox_status.Controls.Add(this.textBox_msg_payload_ASCII);
-            this.groupBox_status.Controls.Add(this.textBox_msg_payload_byte);
-            this.groupBox_status.Location = new System.Drawing.Point(331, 12);
-            this.groupBox_status.Name = "groupBox_status";
-            this.groupBox_status.Size = new System.Drawing.Size(894, 471);
-            this.groupBox_status.TabIndex = 24;
-            this.groupBox_status.TabStop = false;
-            this.groupBox_status.Text = "status";
-            // 
             // label_frameLog_answer
             // 
             this.label_frameLog_answer.AutoSize = true;
-            this.label_frameLog_answer.Location = new System.Drawing.Point(476, 268);
+            this.label_frameLog_answer.Location = new System.Drawing.Point(19, 211);
             this.label_frameLog_answer.Name = "label_frameLog_answer";
             this.label_frameLog_answer.Size = new System.Drawing.Size(119, 13);
             this.label_frameLog_answer.TabIndex = 28;
@@ -480,7 +463,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(476, 63);
+            this.label3.Location = new System.Drawing.Point(19, 50);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(67, 13);
             this.label3.TabIndex = 27;
@@ -488,15 +471,15 @@
             // 
             // textBox_msg_payload_hex
             // 
-            this.textBox_msg_payload_hex.Location = new System.Drawing.Point(553, 60);
+            this.textBox_msg_payload_hex.Location = new System.Drawing.Point(96, 47);
             this.textBox_msg_payload_hex.Name = "textBox_msg_payload_hex";
-            this.textBox_msg_payload_hex.Size = new System.Drawing.Size(335, 20);
+            this.textBox_msg_payload_hex.Size = new System.Drawing.Size(177, 20);
             this.textBox_msg_payload_hex.TabIndex = 26;
             // 
             // label_frameMetadata
             // 
             this.label_frameMetadata.AutoSize = true;
-            this.label_frameMetadata.Location = new System.Drawing.Point(6, 16);
+            this.label_frameMetadata.Location = new System.Drawing.Point(19, 3);
             this.label_frameMetadata.Name = "label_frameMetadata";
             this.label_frameMetadata.Size = new System.Drawing.Size(106, 13);
             this.label_frameMetadata.TabIndex = 25;
@@ -505,7 +488,7 @@
             // label_frameLog
             // 
             this.label_frameLog.AutoSize = true;
-            this.label_frameLog.Location = new System.Drawing.Point(476, 145);
+            this.label_frameLog.Location = new System.Drawing.Point(19, 132);
             this.label_frameLog.Name = "label_frameLog";
             this.label_frameLog.Size = new System.Drawing.Size(79, 13);
             this.label_frameLog.TabIndex = 24;
@@ -514,9 +497,9 @@
             // listBox_frameLog
             // 
             this.listBox_frameLog.FormattingEnabled = true;
-            this.listBox_frameLog.Location = new System.Drawing.Point(5, 39);
+            this.listBox_frameLog.Location = new System.Drawing.Point(12, 309);
             this.listBox_frameLog.Name = "listBox_frameLog";
-            this.listBox_frameLog.Size = new System.Drawing.Size(465, 420);
+            this.listBox_frameLog.Size = new System.Drawing.Size(426, 472);
             this.listBox_frameLog.TabIndex = 23;
             this.listBox_frameLog.SelectedIndexChanged += new System.EventHandler(this.listBox_frameLog_SelectedIndexChanged);
             // 
@@ -526,7 +509,7 @@
             this.logFileToolStripMenuItem});
             this.menuStrip_main.Location = new System.Drawing.Point(0, 0);
             this.menuStrip_main.Name = "menuStrip_main";
-            this.menuStrip_main.Size = new System.Drawing.Size(1237, 24);
+            this.menuStrip_main.Size = new System.Drawing.Size(873, 24);
             this.menuStrip_main.TabIndex = 25;
             this.menuStrip_main.Text = "menuStrip1";
             // 
@@ -541,10 +524,11 @@
             // 
             this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripDropDownButton1,
-            this.tssl_server_status});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 553);
+            this.tssl_server_status,
+            this.tSSl_connection_status});
+            this.statusStrip1.Location = new System.Drawing.Point(0, 801);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(1237, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(873, 22);
             this.statusStrip1.TabIndex = 26;
             this.statusStrip1.Text = "statusStrip1";
             // 
@@ -595,6 +579,12 @@
             this.tssl_server_status.Text = "server status";
             this.tssl_server_status.ToolTipText = "ttt";
             // 
+            // tSSl_connection_status
+            // 
+            this.tSSl_connection_status.Name = "tSSl_connection_status";
+            this.tSSl_connection_status.Size = new System.Drawing.Size(103, 17);
+            this.tSSl_connection_status.Text = "connection_status";
+            // 
             // groupBox_settings
             // 
             this.groupBox_settings.Controls.Add(this.checkBox_SendOnlyIfConnected);
@@ -606,7 +596,7 @@
             this.groupBox_settings.Controls.Add(this.radioButton_send_ascii);
             this.groupBox_settings.Controls.Add(this.radioButton_send_byte);
             this.groupBox_settings.Controls.Add(this.checkBox_send_big_endian);
-            this.groupBox_settings.Location = new System.Drawing.Point(12, 345);
+            this.groupBox_settings.Location = new System.Drawing.Point(12, 139);
             this.groupBox_settings.Name = "groupBox_settings";
             this.groupBox_settings.Size = new System.Drawing.Size(313, 157);
             this.groupBox_settings.TabIndex = 26;
@@ -671,7 +661,7 @@
             // 
             // button_set_time
             // 
-            this.button_set_time.Location = new System.Drawing.Point(439, 489);
+            this.button_set_time.Location = new System.Drawing.Point(704, 398);
             this.button_set_time.Name = "button_set_time";
             this.button_set_time.Size = new System.Drawing.Size(75, 23);
             this.button_set_time.TabIndex = 28;
@@ -681,7 +671,7 @@
             // 
             // button_get_time
             // 
-            this.button_get_time.Location = new System.Drawing.Point(439, 518);
+            this.button_get_time.Location = new System.Drawing.Point(785, 398);
             this.button_get_time.Name = "button_get_time";
             this.button_get_time.Size = new System.Drawing.Size(75, 23);
             this.button_get_time.TabIndex = 29;
@@ -689,17 +679,58 @@
             this.button_get_time.UseVisualStyleBackColor = true;
             this.button_get_time.Click += new System.EventHandler(this.button_get_time_Click);
             // 
+            // panel_frame_content
+            // 
+            this.panel_frame_content.Controls.Add(this.label_frameLog_answer);
+            this.panel_frame_content.Controls.Add(this.textBox_msg_payload_ASCII);
+            this.panel_frame_content.Controls.Add(this.label3);
+            this.panel_frame_content.Controls.Add(this.textBox_msg_payload_byte);
+            this.panel_frame_content.Controls.Add(this.textBox_msg_payload_hex);
+            this.panel_frame_content.Controls.Add(this.label_payload_byte);
+            this.panel_frame_content.Controls.Add(this.label_frameMetadata);
+            this.panel_frame_content.Controls.Add(this.label_payload_ascii);
+            this.panel_frame_content.Controls.Add(this.label2);
+            this.panel_frame_content.Controls.Add(this.textBox_msg_payload_int);
+            this.panel_frame_content.Controls.Add(this.label_frameLog);
+            this.panel_frame_content.Location = new System.Drawing.Point(490, 457);
+            this.panel_frame_content.Name = "panel_frame_content";
+            this.panel_frame_content.Size = new System.Drawing.Size(371, 324);
+            this.panel_frame_content.TabIndex = 30;
+            // 
+            // button_refresh_clientFrameLog
+            // 
+            this.button_refresh_clientFrameLog.Location = new System.Drawing.Point(786, 167);
+            this.button_refresh_clientFrameLog.Name = "button_refresh_clientFrameLog";
+            this.button_refresh_clientFrameLog.Size = new System.Drawing.Size(75, 23);
+            this.button_refresh_clientFrameLog.TabIndex = 31;
+            this.button_refresh_clientFrameLog.Text = "refresh";
+            this.button_refresh_clientFrameLog.UseVisualStyleBackColor = true;
+            this.button_refresh_clientFrameLog.Click += new System.EventHandler(this.button_refresh_clientFrameLog_Click);
+            // 
+            // checkBox_PdataIO
+            // 
+            this.checkBox_PdataIO.AutoSize = true;
+            this.checkBox_PdataIO.Location = new System.Drawing.Point(201, 47);
+            this.checkBox_PdataIO.Name = "checkBox_PdataIO";
+            this.checkBox_PdataIO.Size = new System.Drawing.Size(65, 17);
+            this.checkBox_PdataIO.TabIndex = 31;
+            this.checkBox_PdataIO.Text = "PdataIO";
+            this.checkBox_PdataIO.UseVisualStyleBackColor = true;
+            // 
             // FrmCPS
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1237, 575);
+            this.ClientSize = new System.Drawing.Size(873, 823);
+            this.Controls.Add(this.button_refresh_clientFrameLog);
+            this.Controls.Add(this.comboBox_listClients);
+            this.Controls.Add(this.listBox_clientFrameLog);
+            this.Controls.Add(this.listBox_frameLog);
+            this.Controls.Add(this.panel_frame_content);
             this.Controls.Add(this.button_get_time);
             this.Controls.Add(this.button_set_time);
             this.Controls.Add(this.groupBox_settings);
             this.Controls.Add(this.statusStrip1);
-            this.Controls.Add(this.groupBox_status);
-            this.Controls.Add(this.label1);
             this.Controls.Add(this.groupBox_client);
             this.Controls.Add(this.groupBox_send_msg);
             this.Controls.Add(this.button_check);
@@ -712,14 +743,14 @@
             this.groupBox_client.PerformLayout();
             this.groupBox_send_msg.ResumeLayout(false);
             this.groupBox_send_msg.PerformLayout();
-            this.groupBox_status.ResumeLayout(false);
-            this.groupBox_status.PerformLayout();
             this.menuStrip_main.ResumeLayout(false);
             this.menuStrip_main.PerformLayout();
             this.statusStrip1.ResumeLayout(false);
             this.statusStrip1.PerformLayout();
             this.groupBox_settings.ResumeLayout(false);
             this.groupBox_settings.PerformLayout();
+            this.panel_frame_content.ResumeLayout(false);
+            this.panel_frame_content.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -753,10 +784,8 @@
         private System.Windows.Forms.CheckBox checkBox_cyclic;
         private System.Windows.Forms.TextBox textBox_timer_interval;
         private System.Windows.Forms.Button button_check;
-        private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button button_send_repeat;
         private System.Windows.Forms.Label label_send_times;
-        private System.Windows.Forms.GroupBox groupBox_status;
         private System.Windows.Forms.MenuStrip menuStrip_main;
         private System.Windows.Forms.ToolStripMenuItem logFileToolStripMenuItem;
         private System.Windows.Forms.Label label2;
@@ -788,6 +817,11 @@
         private System.Windows.Forms.Button button_get_time;
         private System.Windows.Forms.Button button_newClient;
         private System.Windows.Forms.ComboBox comboBox_listClients;
+        private System.Windows.Forms.ToolStripStatusLabel tSSl_connection_status;
+        private System.Windows.Forms.ListBox listBox_clientFrameLog;
+        private System.Windows.Forms.Panel panel_frame_content;
+        private System.Windows.Forms.Button button_refresh_clientFrameLog;
+        private System.Windows.Forms.CheckBox checkBox_PdataIO;
     }
 }
 

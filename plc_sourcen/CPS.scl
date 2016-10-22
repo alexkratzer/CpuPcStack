@@ -17,7 +17,7 @@ DATA_BLOCK "CPS_rcv"
 VERSION : 0.1
 NON_RETAIN
    VAR 
-      index_msg : Int;
+      index_msg : Int;   // zeigt immer auf eines weiter als verwendet
       msg : Array[0..20] of "UDT_CPSFrame";
    END_VAR
 
@@ -25,6 +25,72 @@ NON_RETAIN
 BEGIN
 
 END_DATA_BLOCK
+
+FUNCTION "rcvFrame" : Void
+{ S7_Optimized_Access := 'TRUE' }
+VERSION : 0.1
+   VAR_INPUT 
+      RCVdata : "UDT_CPSFrame";
+   END_VAR
+
+
+BEGIN
+	                //empfangene daten in empfangs DB einreihen
+	                "CPS_rcv".msg["CPS_rcv".index_msg] := #RCVdata;
+	                //"CPS_rcv".msg["CPS_rcv".index_msg].remote_addr.REM_IP_ADDR := #RCVdata.remote_addr.REM_IP_ADDR;
+	                //"CPS_rcv".msg["CPS_rcv".index_msg].frame_length := #RCVrcv_len;
+	                
+	                //index in DB erhöhen
+	                //"CPS_rcv".index_msg := "CPS_rcv".index_msg + 1;
+	                
+	                //Ringpuffer überwachen
+	                IF "CPS_rcv".index_msg <= 20 THEN
+	                    //index in DB erhöhen
+	                    "CPS_rcv".index_msg := "CPS_rcv".index_msg + 1;
+	                ELSE
+	                    "CPS_rcv".index_msg := 0;
+	                END_IF;
+	
+	
+	
+	
+	(*
+	CASE #frame.data[0] OF
+	    1:  // read local system time
+	        #frame.frame_length := (*header length*) 6 + (*payload length*) 12;
+	        #tmp_count := RD_LOC_T(#tmp_dtl);
+	        
+	        #tmp_int_array[0] := UINT_TO_INT(#tmp_dtl.YEAR);
+	        #tmp_int_array[1] := UINT_TO_INT(#tmp_dtl.MONTH);
+	        #tmp_int_array[2] := UINT_TO_INT(#tmp_dtl.DAY);
+	        #tmp_int_array[3] := UINT_TO_INT(#tmp_dtl.HOUR);
+	        #tmp_int_array[4] := UINT_TO_INT(#tmp_dtl.MINUTE);
+	        #tmp_int_array[5] := UINT_TO_INT(#tmp_dtl.SECOND);
+	        #tmp_int_array[6] := UDINT_TO_INT(#tmp_dtl.NANOSECOND);
+	        
+	        FOR #tmp_count := 0 TO 6 DO
+	            #frame.data[#tmp_count * 2] := INT_TO_BYTE(#tmp_int_array[#tmp_count]);
+	            #tmp_int_array[#tmp_count] := SWAP(#tmp_int_array[#tmp_count]);
+	            #frame.data[(#tmp_count * 2) + 1] := INT_TO_BYTE(#tmp_int_array[#tmp_count]);
+	        END_FOR;
+	        
+	    2:  // set local system time
+	        #tmp_dtl.YEAR := INT_TO_UINT(#frame.data[1]);
+	        #tmp_dtl.MONTH := INT_TO_USINT(#frame.data[2]);
+	        #tmp_dtl.DAY := INT_TO_USINT(#frame.data[3]);
+	        #tmp_dtl.HOUR := INT_TO_USINT(#frame.data[4]);
+	        #tmp_dtl.MINUTE:= INT_TO_USINT(#frame.data[5]);
+	        #tmp_dtl.SECOND := INT_TO_USINT(#frame.data[6]);
+	        
+	        #tmp_count := WR_SYS_T(#tmp_dtl);
+	        #frame.data[0] := #tmp_count;
+	        #frame.data[1] := 11;
+	        #frame.data[2] := 22;
+	    ELSE  // Statement section ELSE
+	        ;
+	END_CASE;
+	*)
+END_FUNCTION
 
 FUNCTION "sendCPS" : Void
 { S7_Optimized_Access := 'TRUE' }
@@ -36,7 +102,7 @@ VERSION : 0.1
 
 BEGIN
 	
-	"CPS_send".msg["CPS_send".index_msg].remote_ip := #frame.remote_ip;
+	"CPS_send".msg["CPS_send".index_msg].remote_addr := #frame.remote_addr;
 	"CPS_send".msg["CPS_send".index_msg].StructVersion := #frame.StructVersion;
 	"CPS_send".msg["CPS_send".index_msg].HeaderFlags := #frame.HeaderFlags;
 	"CPS_send".msg["CPS_send".index_msg].FrameIndex := #frame.FrameIndex;
@@ -62,24 +128,30 @@ VERSION : 0.1
       SENDTCON {OriginalPartName := 'T_CON'; LibVersion := '3.0'} : TCON;
       SENDconn {OriginalPartName := 'TCON_Param'; LibVersion := '1.0'} : TCON_Param;
       SENDTUSEND {OriginalPartName := 'T_SEND'; LibVersion := '3.0'} : TUSEND;
-      SENDremote_addr {OriginalPartName := 'TADDR_Param'; LibVersion := '1.0'} : TADDR_Param;
    END_VAR
    VAR DB_SPECIFIC
       SENDdata : "UDT_CPSFrame";
-      send_data_AT { S7_HMI_Accessible := 'False'; S7_HMI_Visible := 'False'} AT SENDdata : Array[0..512] of Byte;
+      WASTE_SENDdataAT { S7_HMI_Accessible := 'False'; S7_HMI_Visible := 'False'} AT SENDdata : Array[0..512] of Byte;
    END_VAR
    VAR 
       RCVTCON {OriginalPartName := 'T_CON'; LibVersion := '3.0'} : TCON;
       RCVTURCV {OriginalPartName := 'T_RCV'; LibVersion := '3.0'} : TURCV;
       RCVconn {OriginalPartName := 'TCON_Param'; LibVersion := '1.0'} : TCON_Param;
       RCVstate : Int;
+   END_VAR
+   VAR DB_SPECIFIC
       RCVdata : "UDT_CPSFrame";
-      RCVremote_addr {OriginalPartName := 'TADDR_Param'; LibVersion := '1.0'} : TADDR_Param;
-      RCVrcv_len : UInt;
+      RCVdataINT { S7_HMI_Accessible := 'False'; S7_HMI_Visible := 'False'} AT RCVdata : Array[0..100] of Int;
+   END_VAR
+   VAR 
+      dbg_tmp_dtl {OriginalPartName := 'DTL'; LibVersion := '1.0'} : DTL;
+      dbg_tmp_RCVdataINT : Array[0..100] of Int;
    END_VAR
 
    VAR_TEMP 
       tmp_count : Int;
+      tmp_dtl {OriginalPartName := 'DTL'; LibVersion := '1.0'} : DTL;
+      tmp_int_array : Array[0..15] of Int;
    END_VAR
 
    VAR CONSTANT 
@@ -88,6 +160,11 @@ VERSION : 0.1
       LOCALport : UInt := 2204;
       CONNSEND_ID : CONN_OUC := 1;
       CONNRCV_ID : CONN_OUC := 2;
+      HEADER_container : Byte := 2#1;
+      HEADER_SYNC : Byte := 2#10;
+      HEADER_ACKN : Byte := 2#1000;   // acknowledge
+      HEADER_MngData : Byte := 2#1000000;   // CPU Management Data
+      HEADER_PdataIO : Byte := 2#10000;   // Prozessdata IOs
    END_VAR
 
 
@@ -95,36 +172,34 @@ BEGIN
 	
 	//+++++++++++++++++++++++++++++++++++++++ SEND +++++++++++++++++++++++++++++++++++++
 	CASE #SENDstate OF
-	  #INIT:
-	      #SENDconn.ID := #CONNSEND_ID;
-	      #SENDconn.CONNECTION_TYPE := 19;
-	      #SENDconn.ACTIVE_EST := FALSE;
-	      #SENDconn.LOCAL_TSAP_ID_LEN := 2;
-	      #SENDconn.REM_STADDR_LEN := 0;
-	      #SENDconn.REM_TSAP_ID_LEN := 0;
+	    #INIT:
+	        #SENDconn.ID := #CONNSEND_ID;
+	        #SENDconn.CONNECTION_TYPE := 19;
+	        #SENDconn.ACTIVE_EST := FALSE;
+	        #SENDconn.LOCAL_TSAP_ID_LEN := 2;
+	        #SENDconn.REM_STADDR_LEN := 0;
+	        #SENDconn.REM_TSAP_ID_LEN := 0;
 	      
-	    #SENDconn.LOCAL_TSAP_ID[1] := UINT_TO_BYTE(#LOCALport / 256);
-	    #SENDconn.LOCAL_TSAP_ID[2] := UINT_TO_BYTE(#LOCALport MOD 256);
-	    #SENDTCON.REQ := TRUE;
+	        #SENDconn.LOCAL_TSAP_ID[1] := UINT_TO_BYTE(#LOCALport / 256);
+	        #SENDconn.LOCAL_TSAP_ID[2] := UINT_TO_BYTE(#LOCALport MOD 256);
+	        #SENDTCON.REQ := TRUE;
+	        
+	        IF #SENDTCON.DONE THEN
+	          #SENDTCON.REQ := FALSE;
+	          #SENDstate := #WORKING;
+	        END_IF;
+	        IF #SENDTCON.ERROR THEN
+	          #SENDTCON.REQ := FALSE;
+	        END_IF;
 	    
-	    IF #SENDTCON.DONE THEN
-	      #SENDTCON.REQ := FALSE;
-	      #SENDstate := #WORKING;
-	    END_IF;
-	    IF #SENDTCON.ERROR THEN
-	      #SENDTCON.REQ := FALSE;
-	    END_IF;
-	    
-	  #WORKING:
-	    IF NOT #SENDTUSEND.BUSY AND ("CPS_send".index_msg > 0) THEN
-	      #SENDTUSEND.REQ := TRUE;
-	      "CPS_send".index_msg := "CPS_send".index_msg - 1;
-	      
-	      #SENDremote_addr.REM_IP_ADDR := "CPS_send".msg["CPS_send".index_msg].remote_ip;
-	      #SENDremote_addr.REM_PORT_NR := #port_remote; //TODO: port in SYNC frame von client mitliefern
-	      
-	      #SENDdata := "CPS_send".msg["CPS_send".index_msg];
-	    END_IF;
+	    #WORKING:
+	        IF NOT #SENDTUSEND.BUSY AND ("CPS_send".index_msg > 0) THEN
+	          #SENDTUSEND.REQ := TRUE;
+	          "CPS_send".index_msg := "CPS_send".index_msg - 1;
+	          //#SENDdata.remote_addr.REM_IP_ADDR := "CPS_send".msg["CPS_send".index_msg].remote_addr.REM_IP_ADDR;
+	          #SENDdata := "CPS_send".msg["CPS_send".index_msg];
+	          #SENDdata.remote_addr.REM_PORT_NR := #port_remote; //TODO: port in SYNC frame von client mitliefern
+	        END_IF;
 	END_CASE;
 	
 	IF #SENDTUSEND.DONE THEN
@@ -159,63 +234,111 @@ BEGIN
 	    END_IF;
 	    
 	  #WORKING:
-	    IF #RCVTURCV.NDR THEN
-	        IF #RCVdata.StructVersion = 1 THEN
-	            IF (#RCVdata.HeaderFlags AND 2#1) <> 0 THEN
-	                ;// containering
-	            END_IF;
-	            
+	      IF #RCVTURCV.NDR THEN
+	      (*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	      +++++++++++++++++++++++++++++++++++++++ interprete +++++++++++++++++++++++++++++++++++++
+	      +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*)
+	          IF #RCVdata.StructVersion = 1 THEN
+	              
 	            // SYNC -> Empfangenes packet spiegeln und wieder zurück senden
-	            IF (#RCVdata.HeaderFlags AND 2#10) <> 0 THEN
-	                
-	                #RCVdata.remote_ip := #RCVremote_addr.REM_IP_ADDR;
-	                #RCVdata.frame_length := #RCVrcv_len;
+	            IF (#RCVdata.HeaderFlags AND #HEADER_SYNC) <> 0 THEN
+	                #RCVdata.frame_length := 6; //payload wird abgeschnitten und nur header gesendet
 	                "sendCPS"(#RCVdata);
 	            END_IF;
 	            
-	            //wahrscheinlich wird es dieses bit nur von PLC zu PC geben
-	            IF (#RCVdata.HeaderFlags AND 2#100) <> 0 THEN
-	                ;// LogMessage
-	            END_IF;
-	            IF (#RCVdata.HeaderFlags AND 2#1000) <> 0 THEN
-	                ;// acknowledge
+	            //acknowledge -> 
+	            IF (#RCVdata.HeaderFlags AND #HEADER_ACKN) <> 0 THEN
+	                #RCVdata.frame_length := 100;
+	                "sendCPS"(#RCVdata);
 	            END_IF;
 	            
 	            // ProcessData_value
-	            IF (#RCVdata.HeaderFlags AND 2#10000) <> 0 THEN
-	                //empfangene daten in interface DB einreihen
-	                "CPS_rcv".msg["CPS_rcv".index_msg] := #RCVdata;
-	                "CPS_rcv".msg["CPS_rcv".index_msg].remote_ip := #RCVremote_addr.REM_IP_ADDR;
-	                "CPS_rcv".msg["CPS_rcv".index_msg].frame_length := #RCVrcv_len;
-	                
-	                //index in DB erhöhen
-	                "CPS_rcv".index_msg := "CPS_rcv".index_msg + 1;
-	                
-	                //Ringpuffer überwachen
-	                IF "CPS_rcv".index_msg <= 20 THEN
-	                    //index in DB erhöhen
-	                    "CPS_rcv".index_msg := "CPS_rcv".index_msg + 1;
-	                ELSE
-	                    "CPS_rcv".index_msg := 0;
-	                END_IF;
-	            END_IF;
-	            IF (#RCVdata.HeaderFlags AND 2#100000) <> 0 THEN
-	                ;// ProcessData_param
+	            IF (#RCVdata.HeaderFlags AND #HEADER_PdataIO) <> 0 THEN
+	                "rcvFrame"(#RCVdata);
 	            END_IF;
 	            
 	            // ManagementData
-	            IF (#RCVdata.HeaderFlags AND 2#1000000) <> 0 THEN
-	                ;
+	            IF (#RCVdata.HeaderFlags AND #HEADER_MngData) <> 0 THEN
+	                #RCVdata.frame_length := 20;
+	                CASE (#RCVdataINT[3]) OF
+	                    1:  // read local system time
+	                        #RCVdata.frame_length := (*header length*) 6 + (*payload length*) 12;
+	                        #tmp_count := RD_LOC_T(#tmp_dtl);
+	                        
+	                        #RCVdataINT[3] := UINT_TO_INT(#tmp_dtl.YEAR);
+	                        #RCVdataINT[4] := UINT_TO_INT(#tmp_dtl.MONTH);
+	                        #RCVdataINT[5] := UINT_TO_INT(#tmp_dtl.DAY);
+	                        #RCVdataINT[6] := UINT_TO_INT(#tmp_dtl.HOUR);
+	                        #RCVdataINT[7] := UINT_TO_INT(#tmp_dtl.MINUTE);
+	                        #RCVdataINT[8] := UINT_TO_INT(#tmp_dtl.SECOND);
+	                        #RCVdataINT[9] := UDINT_TO_INT(#tmp_dtl.NANOSECOND);
+	                        
+	                        (*FOR #tmp_count := 0 TO 6 DO
+	                            #RCVdata.data[#tmp_count * 2] := INT_TO_BYTE(#tmp_int_array[#tmp_count]);
+	                            #tmp_int_array[#tmp_count] := SWAP(#tmp_int_array[#tmp_count]);
+	                            #RCVdata.data[(#tmp_count * 2) + 1] := INT_TO_BYTE(#tmp_int_array[#tmp_count]);
+	                        END_FOR;*)
+	                        
+	                    2:  // set local system time
+	                        #dbg_tmp_RCVdataINT := #RCVdataINT;
+	                        #tmp_dtl := DTL#1970-01-01-00:00:00.0;
+	                        #tmp_dtl.YEAR := INT_TO_UINT(#RCVdataINT[4]);
+	                        #tmp_dtl.MONTH := INT_TO_USINT(#RCVdataINT[5]);
+	                        #tmp_dtl.DAY := INT_TO_USINT(#RCVdataINT[6]);
+	                        #tmp_dtl.HOUR := INT_TO_USINT(#RCVdataINT[7]) - 2; //Sommer-/Winter Zeit, Zeitzonen Problematik
+	                        #tmp_dtl.MINUTE := INT_TO_USINT(#RCVdataINT[8]);
+	                        #tmp_dtl.SECOND := INT_TO_USINT(#RCVdataINT[9]);
+	                        #tmp_dtl.NANOSECOND := 0;
+	                        #dbg_tmp_dtl := #tmp_dtl;
+	                        
+	                        #tmp_count := WR_SYS_T(#tmp_dtl);
+	                        #RCVdataINT[3] := #tmp_count;
+	                        #RCVdataINT[4] := 11;
+	                        #RCVdataINT[5] := 22;
+	                        
+	                    3:  // DBG
+	                        #RCVdataINT[3] := 1;
+	                        #RCVdataINT[4] := 10;
+	                        #RCVdataINT[5] := 100;
+	                        #RCVdataINT[6] := 1000;
+	                        #RCVdataINT[7] := 10000;
+	
+	                    ELSE  // Statement section ELSE
+	                        ;
+	                END_CASE;
+	                
+	                
+	                
+	                "sendCPS"(#RCVdata);
 	            END_IF;
+	            
+	            (*
+	                        IF (#RCVdata.HeaderFlags AND 2#100000) <> 0 THEN
+	                ;// ProcessData_param
+	            END_IF;
+	            
+	//wahrscheinlich wird es dieses bit nur von PLC zu PC geben
+	IF (#RCVdata.HeaderFlags AND 2#100) <> 0 THEN
+	    ;// LogMessage
+	END_IF;
+	
+	//TODO für spätere erweiterung
+	IF (#RCVdata.HeaderFlags AND #HEADER_container) <> 0 THEN
+	    ;// containering
+	END_IF;
+	            *)
+	            
 	        ELSE //Frame Struct <> 1 -> ERROR
 	            ;
 	        END_IF;
-	        
-	     
-	        
-	        END_IF;
-	    
+	(*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	+++++++++++++++++++++++++++++++++++ interprete done ++++++++++++++++++++++++++++++++++++
+	+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*)
+	    END_IF;
 	END_CASE;
+	
+	
+	
 	
 	
 	//+++++++++++++++++++++++++++++++++++++++ SEND +++++++++++++++++++++++++++++++++++++
@@ -224,8 +347,8 @@ BEGIN
 	
 	#SENDTUSEND(ID := #CONNSEND_ID,
 	            LEN := #SENDdata.frame_length,
-	            DATA := #send_data_AT,
-	            ADDR := #SENDremote_addr);
+	            DATA := #SENDdata,
+	            ADDR := #SENDdata.remote_addr);
 	
 	
 	
@@ -236,9 +359,10 @@ BEGIN
 	#RCVTURCV(EN_R := true,
 	          ID := #CONNRCV_ID,
 	          LEN := 0,
-	          RCVD_LEN => #RCVrcv_len,
+	          RCVD_LEN => #RCVdata.frame_length,
 	          DATA := #RCVdata,
-	          ADDR := #RCVremote_addr);
+	          ADDR := #RCVdata.remote_addr);
+	
 	
 	
 	

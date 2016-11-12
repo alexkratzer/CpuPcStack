@@ -24,6 +24,13 @@ namespace cpsLIB
                 _sender.server_message("udp_server -> error convert Port to int: " + port);
             initSrv();
         }
+        public udp_server(CpsNet FrmMain, int port)
+        {
+            this.listening = false;
+            _sender = FrmMain;
+            _srvPort = port;
+            initSrv();
+        }
 
         public void initSrv()
         {
@@ -45,7 +52,12 @@ namespace cpsLIB
 
         public void receive()
         {
+            ////// ########################################################################### IBS ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+            //_srvPort = 50000;
+            
+            
             Thread.Sleep(500); //Verzögerung: Beim Tool starten wird erste logmeldung sporadisch zu früh an gui gesendet
+
             try
             {
                 listener = new UdpClient(_srvPort);

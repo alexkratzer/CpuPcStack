@@ -17,9 +17,11 @@ namespace CpuPcStack
 
         CpsClient selectedClient;
               
-        public FrmCPS()
+        
+        public FrmCPS(CpsNet c)
         {
-            CpsNet = new cpsLIB.CpsNet(this);
+            CpsNet = c;
+            //CpsNet = new cpsLIB.CpsNet(this);
             InitializeComponent();
 
             string HostName = System.Net.Dns.GetHostName();
@@ -30,7 +32,36 @@ namespace CpuPcStack
                 comboBox_local_ips.Items.Add(ip.ToString() );
 
             CpsNet.serverSTART(textBox_srv_port.Text);
-            //cpsCMD.
+
+            init_TimerUpdateGui();
+            TimerUpdateGui.Start();
+
+            listBox_frameLog.DataSource = ListFrames;
+
+            textBox_MaxSYNCResendTrys.Text = CpsNet.MaxSYNCResendTrys.ToString();
+            textBox_WATCHDOG_WORK.Text = CpsNet.WATCHDOG_WORK.ToString();
+            checkBox_SendFramesCallback.Checked = CpsNet.SendFramesCallback;
+            checkBox_SendOnlyIfConnected.Checked = CpsNet.SendOnlyIfConnected;
+            checkBox_send_big_endian.Checked = Frame._RemoteIsBigEndian;
+
+
+            makeNewClient();
+            comboBox_listClients.SelectedIndex = 0;
+        }
+
+        public FrmCPS()
+        {
+            CpsNet = new cpsLIB.CpsNet(this);
+            InitializeComponent();
+
+            string HostName = System.Net.Dns.GetHostName();
+            System.Net.IPHostEntry hostInfo = System.Net.Dns.GetHostEntry(HostName);
+
+            label_host_name.Text = HostName;
+            foreach (System.Net.IPAddress ip in hostInfo.AddressList)
+                comboBox_local_ips.Items.Add(ip.ToString());
+
+            CpsNet.serverSTART(textBox_srv_port.Text);
 
             init_TimerUpdateGui();
             TimerUpdateGui.Start();
@@ -92,8 +123,7 @@ namespace CpuPcStack
         }
         private void button_check_Click(object sender, EventArgs e)
         {
-            if (!CpsNet.send_SYNC((CpsClient)comboBox_listClients.SelectedItem))
-                MessageBox.Show("no connection found....", "CpsNet.send_SYNC()");
+            button_check.Text = "connections: " + CpsNet.send_SYNC((CpsClient)comboBox_listClients.SelectedItem);
         }
         private void button_send_repeat_Click(object sender, EventArgs e)
         {
@@ -232,9 +262,10 @@ namespace CpuPcStack
             {
                 this.Invoke(new srv_msgCallback(this.srv_msg_funkt), new object[] { msg });
             }
-            catch (Exception e)
+            catch (Exception )
             {
-                MessageBox.Show("srv_msgCallback: " + e.Message, "writing to GUI failed");
+                //form closing throws exeption -> TODO catch
+                //MessageBox.Show("srv_msgCallback: " + e.Message, "writing to GUI failed");
             }
         }
 

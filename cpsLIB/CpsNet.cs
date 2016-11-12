@@ -25,6 +25,7 @@ namespace cpsLIB
         private udp_server _udp_server;
         //private udp_client _udp_client;
         System.Collections.Concurrent.ConcurrentQueue<Frame> _fstack = null;
+        private List<Frame> LFrameRcv;
 
         private List<CpsClient> ListConnection = new List<CpsClient>();
 
@@ -33,6 +34,7 @@ namespace cpsLIB
 
         //connection parameter
         public int TotalFramesFinished = 0; //Frames die auf eine anfrage hin empfangen wurden und verarbeitet werden können
+        public int TotalFramesSend = 0; //send frame count
         public TimeSpan TimeRcvAnswerMin = TimeSpan.MaxValue;
         public TimeSpan TimeRcvAnswerMax = TimeSpan.MinValue;
  
@@ -40,14 +42,21 @@ namespace cpsLIB
         public CpsNet(IcpsLIB FrmMain)
         {
             _FrmMain = FrmMain;
-            //_udp_client = new udp_client();
             _fstack = new System.Collections.Concurrent.ConcurrentQueue<Frame>();
-            //_fstackLog = new System.Collections.Concurrent.ConcurrentQueue<Frame>();
+            LFrameRcv = new List<Frame>();
             StackWorker();
         }
   
         #region client
-        public object newClient(string ip, string port)
+        //public string GetClients()
+        //{
+        //    string s = "";
+        //    foreach (CpsClient cc in ListConnection)
+        //        s += cc.ToDetailedString() + Environment.NewLine;
+        //    return s;
+        //}
+
+        public CpsClient newClient(string ip, string port)
         { 
                 CpsClient client = new CpsClient(ip, port);
                 ListConnection.Add(client);
@@ -58,8 +67,10 @@ namespace cpsLIB
         {
             if (ConnectVerifyState(f, udp_state.connected) || f.GetHeaderFlag(FrameHeaderFlag.SYNC))
             {
-                if (putFrameToStack(f))
-                    f.client.send(f);
+                f.ChangeState(FrameWorkingState.inWork, "Frame put to Stack");
+                _fstack.Enqueue(f);
+                TotalFramesSend++;
+                f.client.send(f);
             }
             else
                 f.ChangeState(FrameWorkingState.error, "Remote udp_state NOT connected - NO Frame is send");
@@ -69,7 +80,12 @@ namespace cpsLIB
                 _FrmMain.interprete_frame(f);
         }
 
-        public bool send_SYNC(CpsClient cc)
+        /// <summary>
+        /// sends sync frame to plc
+        /// </summary>
+        /// <param name="cc">CpsClient (ip/port)</param>
+        /// <returns>ListConnection.Count</returns>
+        public int send_SYNC(CpsClient cc)
         {
             foreach (CpsClient listCC in ListConnection)
             {
@@ -79,14 +95,19 @@ namespace cpsLIB
                     f.SetHeaderFlag(FrameHeaderFlag.SYNC);
                     send(f);
                     listCC.state = udp_state.unknown;
-                    return true;
+                    return ListConnection.Count;
                 }
             }
-            return false;
-            //wenn keine connection gefunden wurde wird eine neue angelegt
-            //TODO - jetzt wahrscheinlich überflüssig da schon eine gültige connection übergeben wird
-            //ListConnection.Add(new CpsClient(ip, port));
-            //ConnectionCheck(ip, port);
+
+            //no connection found -> make new one
+            ListConnection.Add(cc);
+            //send_SYNC(cc); 
+            Frame fe = new Frame(cc);
+            fe.SetHeaderFlag(FrameHeaderFlag.SYNC);
+            send(fe);
+            cc.state = udp_state.unknown;
+
+            return ListConnection.Count;
         }
 
         private bool ConnectVerifyState(Frame f, udp_state matchState)
@@ -124,6 +145,12 @@ namespace cpsLIB
         {
             _udp_server = new udp_server(this, port);
         }
+        public void serverSTART(int port)
+        {
+            //thread sleep if serverStart is called at gui construktor
+            Thread.Sleep(500);
+            _udp_server = new udp_server(this, port);
+        }
         public void serverSTOP()
         {
             if (_udp_server != null)
@@ -137,9 +164,7 @@ namespace cpsLIB
 
         public void receive(Frame f)
         {
-            //TODO: handle different IP requests in list
-            
-            ConnectStateChange(f, udp_state.connected);
+            SetStateConnected(f);
 
             //remove frame from "InWork Jobs" 
             if (!_fstack.IsEmpty)
@@ -168,27 +193,49 @@ namespace cpsLIB
             }
             else
             {
-                f.ChangeState(FrameWorkingState.error, "received udp frame without request...");
-                server_message("received udp frame without request...");
+                f.ChangeState(FrameWorkingState.error, "received udp frame without request -> _fstack.IsEmpty");
+                server_message("received udp frame without request -> _fstack.IsEmpty");
             }
+
+            //put received frame in list 
+            LFrameRcv.Add(f);
 
             //received frame will be passed to the main application
             _FrmMain.interprete_frame(f);
         }
 
-        private void ConnectStateChange(Frame f, udp_state state)
+        /// <summary>
+        /// frame received -> connection to frame is set to: connected
+        /// </summary>
+        /// <param name="f"></param>
+        private void SetStateConnected(Frame f)
         {
             foreach (CpsClient cs in ListConnection)
                 if (cs.RemoteIp == f.client.RemoteIp) //hier wichtig das nur die ip verglichen wird. port ist unterschiedlich
                 {
-                    cs.state = state;
+                    cs.state = udp_state.connected;
                     return;
                 }
 
             //wenn keine connection zu dem frame gefunden wurde wird fehler gemeldet
-            f.ChangeState(FrameWorkingState.warning, "no connection found to: " + f.client);
+            f.ChangeState(FrameWorkingState.warning, "no connection found to: " + f.client + " make new one!");
+            //TODO: könnte hier eine neue connection anlegen....
+
+            //if(var.make_connection_OnRcvUnknownFrame)
+            ListConnection.Add(new CpsClient(f.client.RemoteIp,f.client.RemotePortStr));
+
         }
 
+        #endregion
+
+        #region getter
+        public string GetSendFrames() { 
+        
+            string s = "";
+            foreach (Frame f in LFrameRcv)
+                s += f.ToString() + Environment.NewLine;
+            return s;
+        }
         #endregion
 
         #region handle frame stack
@@ -215,27 +262,27 @@ namespace cpsLIB
         /// bereits vorhanden ist wird dieses nicht erneut abgelegt
         /// </summary>
         /// <param name="f"></param>
-        private bool putFrameToStack(Frame f)
-        {
-            /// funktionalität entfernt -> wenn benötigt muss im frame header der index maskiert werden
+        //private bool putFrameToStack(Frame f)
+        //{
+        //    /// funktionalität entfernt -> wenn benötigt muss im frame header der index maskiert werden
 
-            //if (!_fstack.IsEmpty)
-            //    foreach (Frame frame in _fstack)
-            //    {
-            //        if ( (frame.getPayload() == f.getPayload()) && (f.heaheader.Equals(f.header))
-            //        //if (frame.isEqualExeptIndex_WASTE(f))
-            //        {
-            //            f.ChangeState(FrameWorkingState.error, "Frame already in send buffer");
+        //    //if (!_fstack.IsEmpty)
+        //    //    foreach (Frame frame in _fstack)
+        //    //    {
+        //    //        if ( (frame.getPayload() == f.getPayload()) && (f.heaheader.Equals(f.header))
+        //    //        //if (frame.isEqualExeptIndex_WASTE(f))
+        //    //        {
+        //    //            f.ChangeState(FrameWorkingState.error, "Frame already in send buffer");
                         
-            //            Thread.Sleep(100);
-            //            return false;
-            //        }
-            //    }
+        //    //            Thread.Sleep(100);
+        //    //            return false;
+        //    //        }
+        //    //    }
 
-            f.ChangeState(FrameWorkingState.inWork, "Frame put to Stack");
-            _fstack.Enqueue(f);
-            return true;
-        }
+        //    f.ChangeState(FrameWorkingState.inWork, "Frame put to Stack");
+        //    _fstack.Enqueue(f);
+        //    return true;
+        //}
 
         public int InWorkFrameCount()
         {
@@ -287,7 +334,7 @@ namespace cpsLIB
                                     f.SendTrys++;
                                     f.LastSendDateTime = DateTime.Now;
                                     f.ChangeState(FrameWorkingState.warning, "repeat send: (" + f.SendTrys.ToString() + ")");
-                                    f.client.send(f);
+                                    f.client.send(f); //TODO: return bool auswerten
                                 }
                                 else
                                 {

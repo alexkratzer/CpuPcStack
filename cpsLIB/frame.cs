@@ -13,10 +13,17 @@ namespace cpsLIB
     public enum FrameSender { SEND, RCVE, unknown }
     public enum FrameState { ERROR, IS_OK}
     public enum FrameWorkingState { created, inWork, finish, error, warning, received, send}
-
+    
+        //public static Int16[] SET_STATE(int index, string position, string angle) { return new Int16[] { Convert.ToInt16(index), 2, Convert.ToInt16(position), Convert.ToInt16(angle), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; }
+        //public static Int16[] SET_STATE(int index, bool state_switch) { return new Int16[] { Convert.ToInt16(index), 2, Convert.ToInt16(state_switch), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; }
+    
     //order of the flags must match with the Remote FrameHeaderFlag 
     public enum FrameHeaderFlag { containering = 0, SYNC, LogMessage, ACKN, PdataIO, PdataParam, MngData }
-    public enum HeaderFlagManagementData { GetTime = 1, SetTime = 2 } 
+    public enum HeaderFlagManagementData { GetTime = 1, SetTime = 2 }
+    public enum DataIOType { GetState=1, SetState=2, GetParam=3, SetParam=4, 
+        init_jalousie=5, JALOUSIE_EVENT_GET=6, JALOUSIE_EVENT_SET=7, GET_CPU_TIME=10,
+        GET_WEATHER = 11, NET_SET_LIGHT_CMD = 12
+    }
 
     public class FrameRawData
     {
@@ -126,7 +133,14 @@ namespace cpsLIB
         {
             return FramePayloadByte;
         }
-
+        public byte getPayload(int i)
+        {
+            return FramePayloadByte[i];
+        }
+        public Int16 getPayloadInt(int i)
+        {
+            return (Int16)(256 * FramePayloadByte[i] + FramePayloadByte[i+1]); 
+        }
         public bool IsEqual(Frame f)
         {
             if ((this.FramePayloadByte == f.FramePayloadByte) && (this.header == f.header))
@@ -378,11 +392,14 @@ namespace cpsLIB
             base(cc, data, FrameSender.RCVE) { }
         #endregion
 
+        
         #region frames_payload NOT_USED
-        public static Int16[] GET_STATE(int index) { return new Int16[] { Convert.ToInt16(index), 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; }
-        public static Int16[] GET_PARAM(int index) { return new Int16[] { Convert.ToInt16(index), 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; }
+        /*public static Int16[] GET_STATE(Int16 index) { return new Int16[] { index, 1 }; }
+        public static Int16[] GET_PARAM(int index) { return new Int16[] { Convert.ToInt16(index), 3 }; }
         public static Int16[] SET_STATE(int index, string position, string angle) { return new Int16[] { Convert.ToInt16(index), 2, Convert.ToInt16(position), Convert.ToInt16(angle), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; }
         public static Int16[] SET_STATE(int index, bool state_switch) { return new Int16[] { Convert.ToInt16(index), 2, Convert.ToInt16(state_switch), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; }
+        
+         */
         //public static Frame FRAME_SYNC(Int16 index, string ip, string port) {
         //    return new Frame(ip, port, FrameType.SYNC.ToString(), index);
         //    /*
@@ -412,6 +429,22 @@ namespace cpsLIB
                 byte_array[(i * 2) + 1] = tmp_bytes[1];
             }
             return byte_array;
+        }
+
+        //
+        public bool isJob(DataIOType jobType)
+        {
+            if (getPayloadInt(1) == (Int16)jobType)
+                return true;
+            else
+                return false;
+        }
+        public bool isIndex(int index)
+        {
+            if (getPayloadInt(0) == index)
+                return true;
+            else
+                return false;
         }
         #endregion
     }

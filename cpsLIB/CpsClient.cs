@@ -7,6 +7,7 @@ using System.Net.Sockets;
 
 namespace cpsLIB
 {
+    [Serializable]
     public class CpsClient
     {
         //public Int16 check_trys = 0;
@@ -36,6 +37,14 @@ namespace cpsLIB
             return RemoteIp + ":" + RemotePortStr;
         }
 
+        public string ToDetailedString()
+        {
+            string ans = RemoteIp + ":" + RemotePortStr + " {" + state.ToString() + " / SendFrames: " + LFrame.Count.ToString() + " } ";
+            foreach (Frame f in LFrame)
+                ans += Environment.NewLine + f.ToString();
+            return ans;
+        }
+
         public bool IsEqual(CpsClient cc) {
             if ( (RemoteIp == cc.RemoteIp) && (RemotePort == cc.RemotePort) )
                 return true;
@@ -46,14 +55,23 @@ namespace cpsLIB
         #region udp client
         Thread _clientThread;
 
-        public void send(Frame f)
+        public bool send(Frame f)
         {
-            LFrame.Add(f);
-            CountSendFrames++;
-            //_clientThread = new Thread(new ThreadStart(send_fkt));
-            _clientThread = new Thread(()=> send_fkt(f));
-            _clientThread.IsBackground = true;
-            _clientThread.Start();
+            try
+            {
+                CountSendFrames++;
+                LFrame.Add(f);
+                //_clientThread = new Thread(new ThreadStart(send_fkt));
+                _clientThread = new Thread(() => send_fkt(f));
+                _clientThread.IsBackground = true;
+                _clientThread.Start();
+            }
+            catch (Exception e)
+            {
+                f.ChangeState(FrameWorkingState.error, "Exception send Frame: " + e.Message);
+                return false;
+            }
+            return true;
         }
 
         private void send_fkt(Frame f)

@@ -33,6 +33,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -41,17 +42,27 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CpsClient.cs" />
+    <Compile Include="Client.cs" />
     <Compile Include="frame.cs" />
+    <Compile Include="FrmStatusLog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FrmStatusLog.Designer.cs">
+      <DependentUpon>FrmStatusLog.cs</DependentUpon>
+    </Compile>
     <Compile Include="IcpsLIB.cs" />
     <Compile Include="log.cs" />
     <Compile Include="CpsNet.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="udp_client.cs" />
-    <Compile Include="udp_server.cs" />
+    <Compile Include="Server.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="CPS_protokoll.xlsx" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="FrmStatusLog.resx">
+      <DependentUpon>FrmStatusLog.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -52,6 +52,7 @@
             this.textBox_msg_payload_byte = new System.Windows.Forms.TextBox();
             this.checkBox_send_big_endian = new System.Windows.Forms.CheckBox();
             this.groupBox_send_msg = new System.Windows.Forms.GroupBox();
+            this.checkBox_PdataIO = new System.Windows.Forms.CheckBox();
             this.checkBox_ManagementData = new System.Windows.Forms.CheckBox();
             this.checkBox_acknowledge = new System.Windows.Forms.CheckBox();
             this.button_send_repeat = new System.Windows.Forms.Button();
@@ -92,7 +93,6 @@
             this.button_get_time = new System.Windows.Forms.Button();
             this.panel_frame_content = new System.Windows.Forms.Panel();
             this.button_refresh_clientFrameLog = new System.Windows.Forms.Button();
-            this.checkBox_PdataIO = new System.Windows.Forms.CheckBox();
             this.groupBox_client.SuspendLayout();
             this.groupBox_send_msg.SuspendLayout();
             this.menuStrip_main.SuspendLayout();
@@ -324,6 +324,16 @@
             this.groupBox_send_msg.TabIndex = 18;
             this.groupBox_send_msg.TabStop = false;
             this.groupBox_send_msg.Text = "send message";
+            // 
+            // checkBox_PdataIO
+            // 
+            this.checkBox_PdataIO.AutoSize = true;
+            this.checkBox_PdataIO.Location = new System.Drawing.Point(201, 47);
+            this.checkBox_PdataIO.Name = "checkBox_PdataIO";
+            this.checkBox_PdataIO.Size = new System.Drawing.Size(65, 17);
+            this.checkBox_PdataIO.TabIndex = 31;
+            this.checkBox_PdataIO.Text = "PdataIO";
+            this.checkBox_PdataIO.UseVisualStyleBackColor = true;
             // 
             // checkBox_ManagementData
             // 
@@ -606,6 +616,7 @@
             // checkBox_SendOnlyIfConnected
             // 
             this.checkBox_SendOnlyIfConnected.AutoSize = true;
+            this.checkBox_SendOnlyIfConnected.Enabled = false;
             this.checkBox_SendOnlyIfConnected.Location = new System.Drawing.Point(141, 134);
             this.checkBox_SendOnlyIfConnected.Name = "checkBox_SendOnlyIfConnected";
             this.checkBox_SendOnlyIfConnected.Size = new System.Drawing.Size(130, 17);
@@ -706,16 +717,6 @@
             this.button_refresh_clientFrameLog.Text = "refresh";
             this.button_refresh_clientFrameLog.UseVisualStyleBackColor = true;
             this.button_refresh_clientFrameLog.Click += new System.EventHandler(this.button_refresh_clientFrameLog_Click);
-            // 
-            // checkBox_PdataIO
-            // 
-            this.checkBox_PdataIO.AutoSize = true;
-            this.checkBox_PdataIO.Location = new System.Drawing.Point(201, 47);
-            this.checkBox_PdataIO.Name = "checkBox_PdataIO";
-            this.checkBox_PdataIO.Size = new System.Drawing.Size(65, 17);
-            this.checkBox_PdataIO.TabIndex = 31;
-            this.checkBox_PdataIO.Text = "PdataIO";
-            this.checkBox_PdataIO.UseVisualStyleBackColor = true;
             // 
             // FrmCPS
             // 

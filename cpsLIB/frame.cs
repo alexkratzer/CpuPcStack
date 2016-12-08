@@ -11,7 +11,7 @@ using System.Net;
 namespace cpsLIB
 {
     public enum FrameSender { SEND, RCVE, unknown }
-    public enum FrameState { ERROR, IS_OK}
+    public enum FrameState { UNDEF, ERROR, IS_OK}
     public enum FrameWorkingState { created, inWork, finish, error, warning, received, send}
     
         //public static Int16[] SET_STATE(int index, string position, string angle) { return new Int16[] { Convert.ToInt16(index), 2, Convert.ToInt16(position), Convert.ToInt16(angle), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; }
@@ -24,6 +24,7 @@ namespace cpsLIB
         init_jalousie=5, JALOUSIE_EVENT_GET=6, JALOUSIE_EVENT_SET=7, GET_CPU_TIME=10,
         GET_WEATHER = 11, NET_SET_LIGHT_CMD = 12
     }
+    public enum DataMngType { GetPlcTime=1, SetPlcTime=2    }
 
     public class FrameRawData
     {
@@ -36,44 +37,60 @@ namespace cpsLIB
         //public int RemotePort;
 
         // connection depending to frame
-        public CpsClient client;
+        public Client client;
 
         // frame meta data
         public DateTime TimeCreated; //Zeitstempel an dem das Frame erzeugt wurde
 
         public FrameSender frameSender = FrameSender.unknown;
         private List<frameLog> ListFrameLog;
-        public FrameState frameState = FrameState.IS_OK;
+        //public FrameState frameState = FrameState.UNDEF;
         public int SendTrys; //Wird bei FrameType.SYNC Frames verwendet. Anzahl der wiederholungen bei keiner antwort
         public DateTime LastSendDateTime;
         public TimeSpan TimeRcvAnswer; //wird beim empfangen einer antwort gesetzt
-        
+        private Int16 Index_tmp;
         
         // static meta data
         public static bool _RemoteIsBigEndian = true; //PC = Little-Endian, CPU = Big-Endian
 
+        public static Int16 _allFrameCounter = 0; //frame index -> at >255 restart @0
+        public static Int64 _allFrameCounterTotal = 0; //all frames in total since tool start
         #endregion
 
         #region construktor
-        public FrameRawData(CpsClient _client, byte[] data, FrameSender FS)
+        public FrameRawData(Client _client, byte[] data, FrameSender FS)
         {
-            this.client = _client;
-            ListFrameLog = new List<frameLog>();
-            TimeCreated = DateTime.Now;
-            LastSendDateTime = DateTime.Now;
-            frameSender = FS;
-            //RemoteIp = ip;
+            //TODO: catch ursache beheben(client == null)
+            try
+            {
+                _allFrameCounter++;
+                _allFrameCounterTotal++;
+                
+                this.client = _client; //client evtl überflüssig wenn nur wegen counter (***) verwendet
+                ListFrameLog = new List<frameLog>();
+                TimeCreated = DateTime.Now;
+                LastSendDateTime = DateTime.Now;
+                frameSender = FS;
+                //RemoteIp = ip;
 
-            //if (int.TryParse(port, out RemotePort))
-            //{
-                if (frameSender.Equals(FrameSender.SEND)) {
+                //if (int.TryParse(port, out RemotePort))
+                //{
+                if (frameSender.Equals(FrameSender.SEND))
+                {
                     // ++ send Frame to Remote ++
                     //data is only payload, no FrameHeader
+                    Index_tmp = _allFrameCounter;
                     ChangeState(FrameWorkingState.created, "make new frame to send it later on");
-                    header = new FrameHeader(client.CountSendFrames);
+                    
+                    //header = new FrameHeader(client.CountSendFrames); (***)
+                    header = new FrameHeader(Index_tmp);
                     FramePayloadByte = data;
+
+                    if (_RemoteIsBigEndian)
+                        FramePayloadByte = changeEndian(FramePayloadByte);
                 }
-                else if (frameSender.Equals(FrameSender.RCVE)) {
+                else if (frameSender.Equals(FrameSender.RCVE))
+                {
                     // ++ rcv Frame from Remote ++
                     //data includes FrameHeader
                     ChangeState(FrameWorkingState.created, "make new frame from rcv UDP Frame");
@@ -83,19 +100,20 @@ namespace cpsLIB
                 else
                     ChangeState(FrameWorkingState.error, "FrameSender == unknown");
 
-                if (_RemoteIsBigEndian)
-                    FramePayloadByte = changeEndian(FramePayloadByte); 
-            //}
-            //else
-            //    ChangeState(FrameWorkingState.error, "structural defect @send Frame -> port not valid: " + port);
+
+                //}
+                //else
+                //    ChangeState(FrameWorkingState.error, "structural defect @send Frame -> port not valid: " + port);
+            }
+            catch (Exception) {}
         }
         #endregion
 
         #region functions 
         public override string ToString()
         {
-            return client.ToString() + " / " + TimeCreated.ToString("ss:fff") + " (" + frameSender.ToString() + "/" + frameState.ToString() + "/" +
-                ")  " + header.ToString();
+            //return "[" + frameSender.ToString() + " / " + client.RemoteIp + " / " + header.ToString() + "] ";
+            return _allFrameCounterTotal.ToString() + " " + frameSender.ToString() + " / " + header.ToString();
         }
 
         private byte[] changeEndian(byte[] data)
@@ -122,13 +140,15 @@ namespace cpsLIB
         {
             //log.msg(this, GetDetailedString());
             //wenn error wird globaler ERROR für das Frame gesetzt
-            if (ws.Equals(FrameWorkingState.error))
-                frameState = FrameState.ERROR;
+            //if (ws.Equals(FrameWorkingState.error))
+            //    frameState = FrameState.ERROR;
 
             ListFrameLog.Add(new frameLog(ws, msg));
             return this;
         }
         #endregion
+
+        #region getter
         public byte[] getPayload()
         {
             return FramePayloadByte;
@@ -139,7 +159,12 @@ namespace cpsLIB
         }
         public Int16 getPayloadInt(int i)
         {
-            return (Int16)(256 * FramePayloadByte[i] + FramePayloadByte[i+1]); 
+            int index = i * 2;
+            //byte 0 LB
+            //byte 1 HB
+            //return (Int16)(256 * FramePayloadByte[index+1] + FramePayloadByte[index]);
+            Int16 tmp = (Int16)(256 * FramePayloadByte[index] + FramePayloadByte[index+1]);
+            return tmp;
         }
         public bool IsEqual(Frame f)
         {
@@ -148,7 +173,7 @@ namespace cpsLIB
             else
                 return false;
         }
-        #region getter
+
         private Int16[] GetIntArr(byte[] data)
         {
             Int16[] intData = new Int16[data.Length / 2];
@@ -186,7 +211,33 @@ namespace cpsLIB
             return new string(Encoding.ASCII.GetString(FramePayloadByte).ToCharArray());
         }
 
+        /// <summary>
+        /// shows frame content as Byte Array
+        /// is used @FrmStatusLog 
+        /// </summary>
+        /// <returns>string representant</returns>
+        public string ShowFrameAsByteArry() {
+            //byte[] ba = GetByteArray();
+            return BitConverter.ToString(FramePayloadByte);
+        }
+        /// <summary>
+        /// shows frame header content as Byte Array
+        /// is used @FrmStatusLog 
+        /// </summary>
+        /// <returns>string representant</returns>
+        public string ShowHeaderAsByteArry()
+        {
+            return BitConverter.ToString(header.GetSendBytes());
+        }
 
+        /// <summary>
+        /// cat of remote IP adress and frame index number
+        /// used to find frames in fstack (dictionary)
+        /// </summary>
+        /// <returns></returns>
+        public string GetKey() {
+            return client.RemoteIp + ":" + header.FrameIndex.ToString();
+        }
 
         /// <summary>
         /// Returns Frame Header + Frame Content to send it over stream
@@ -217,9 +268,6 @@ namespace cpsLIB
             return header.GetHeaderFlag(fhf);
         }
 
-        public static int GetCountRcvFrames() {
-            return FrameHeader.RcvFramesCount;
-        }
         #endregion
 
         class FrameHeader
@@ -264,8 +312,18 @@ namespace cpsLIB
 
             //16Bit FrameIndex -> wird vom client für jedes neue frame inkrementiert. server sendet als antwort frame mit dem gleichen index
             private Int16 _FrameIndex;
+            /// <summary>
+            /// return in changed Endian format
+            /// </summary>
             public Int16 FrameIndex
             {
+                set
+                {
+                    byte[] b = BitConverter.GetBytes(value);
+                    _FrameIndex = (Int16)(b[0] * 256 + b[1]);
+                    _FrameIndex = (Int16)(b[1] + b[0]);
+                    //_FrameIndex = value;
+                }
                 get { return _FrameIndex; }
             }
 
@@ -282,7 +340,7 @@ namespace cpsLIB
                     ByteHeaderFlag = ByteArray[1];
                     resByteI = ByteArray[2];
                     resByteII = ByteArray[3];
-                    _FrameIndex = BitConverter.ToInt16(ByteArray, 4);
+                    FrameIndex = BitConverter.ToInt16(ByteArray, 4);
 
                     extractet_payload = new byte[ByteArray.Length - FrameHeaderByteLength];
                     System.Buffer.BlockCopy(ByteArray, FrameHeaderByteLength, extractet_payload, 0, extractet_payload.Length);
@@ -293,16 +351,38 @@ namespace cpsLIB
             //Frame to send at remote
             public FrameHeader(Int16 index)
             {
-                _FrameIndex = index;
+                FrameIndex = index;
             }
             #endregion
 
-
             #region functions
+
+
             public void SetHeaderFlag(FrameHeaderFlag fhf)
             {
                 ByteHeaderFlag = SetBit(ByteHeaderFlag, (int)fhf);
             }
+
+            private FrameHeaderFlag GetHeaderFlag(){
+
+                int count = ByteHeaderFlag;
+                int map = -0;
+                switch (count) {
+                    case 1: map = 0; break;
+                    case 2: map = 1; break;
+                    case 4: map = 2; break;
+                    case 8: map = 3; break;
+                    case 16: map = 4; break;
+                    case 32: map = 5; break;
+                    case 64: map = 6; break;
+                    case 128: map = 7; break;
+
+                    default: map = count; break;
+                }
+
+                return (FrameHeaderFlag)map;
+            }
+
             public bool GetHeaderFlag(FrameHeaderFlag fhf)
             {
                 return (ByteHeaderFlag & (1 << (int)fhf)) != 0;
@@ -313,11 +393,11 @@ namespace cpsLIB
                 bytearr[0] = StructVersion;
                 bytearr[1] = ByteHeaderFlag;
                 bytearr[2] = resByteI;
-                bytearr[3] = resByteII;
-                System.Buffer.BlockCopy(BitConverter.GetBytes(_FrameIndex), 0, bytearr, 4, 2); //TODO LittleBigEndian hier auch beachten
+                bytearr[3] = resByteII;                 //TODO LittleBigEndian beachten //Bytes noch drehen -> wird bei set gemacht
+                System.Buffer.BlockCopy(BitConverter.GetBytes(_FrameIndex), 0, bytearr, 4, 2); 
                 return bytearr;
             }
-
+            
             /// <summary>
             /// Setzt ein bestimmtes Bit in einem Byte.
             /// </summary>
@@ -336,7 +416,8 @@ namespace cpsLIB
             return "{Struct: " + StructVersion.ToString() + " Type: " + Convert.ToString(ByteHeaderFlag, 2) + 
                 " res: " + resByteI.ToString() + "," + resByteII.ToString() + " Index: " + _FrameIndex.ToString() + "} ";
           * */
-                return "{flag: " + Convert.ToString(ByteHeaderFlag, 2) + " Idx: " + _FrameIndex.ToString() + "} ";
+                //return "{flag: " + Convert.ToString(ByteHeaderFlag, 2) + " Idx: " + _FrameIndex.ToString() + "} ";
+                return GetHeaderFlag() + " / " + _FrameIndex.ToString();
             }
             #endregion
         }
@@ -363,7 +444,7 @@ namespace cpsLIB
 
    
     public class  Frame : FrameRawData{
-        public FrameRawData AnswerFrame = null;
+        //public FrameRawData AnswerFrame = null;
 
         #region construktor
         /// <summary>
@@ -371,7 +452,7 @@ namespace cpsLIB
         /// </summary>
         //public Frame(string ip, string port) :
         //    base(ip, port, new byte[] { }, FrameSender.SEND) { }
-        public Frame(CpsClient cc) :
+        public Frame(Client cc) :
             base(cc, new byte[] { }, FrameSender.SEND) { }
 
         /// <summary>
@@ -379,33 +460,34 @@ namespace cpsLIB
         /// </summary>
         //public Frame(string ip, string port, Int16[] data) :
         //    base(ip, port, getByteArray(data), FrameSender.SEND) { }
-        public Frame(CpsClient cc, Int16[] data) :
+        public Frame(Client cc, Int16[] data) :
             base(cc, getByteArray(data), FrameSender.SEND) { }
 
         //public Frame(string ip, string port, char[] data) :
         //    base(ip, port, getByteArray(data), FrameSender.SEND) { }
-        public Frame(CpsClient cc, char[] data) :
+        public Frame(Client cc, char[] data) :
             base(cc, getByteArray(data), FrameSender.SEND) { }
 
         //Frame das Empfangen wurde
-        public Frame(CpsClient cc, byte[] data) :
+        public Frame(Client cc, byte[] data) :
             base(cc, data, FrameSender.RCVE) { }
         #endregion
-
-        
-        #region frames_payload NOT_USED
+      
+        #region frames_payload (to make frames)
         /*public static Int16[] GET_STATE(Int16 index) { return new Int16[] { index, 1 }; }
         public static Int16[] GET_PARAM(int index) { return new Int16[] { Convert.ToInt16(index), 3 }; }
         public static Int16[] SET_STATE(int index, string position, string angle) { return new Int16[] { Convert.ToInt16(index), 2, Convert.ToInt16(position), Convert.ToInt16(angle), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; }
         public static Int16[] SET_STATE(int index, bool state_switch) { return new Int16[] { Convert.ToInt16(index), 2, Convert.ToInt16(state_switch), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }; }
         
          */
-        //public static Frame FRAME_SYNC(Int16 index, string ip, string port) {
-        //    return new Frame(ip, port, FrameType.SYNC.ToString(), index);
-        //    /*
-        //     Frame f = new Frame(FrameType.SYNC.ToString(), check_trys, textBox_remote_ip.Text, textBox_remotePort.Text);
-        //     */ 
-        //}
+
+
+        public static Frame MngData(Client c, DataMngType DMT)
+        {
+            Frame f = new Frame(c, new Int16[] { (Int16)DMT });
+            f.SetHeaderFlag(FrameHeaderFlag.MngData);
+            return f;
+        }
         #endregion
 
         #region  funktionen
@@ -439,7 +521,7 @@ namespace cpsLIB
             else
                 return false;
         }
-        public bool isIndex(int index)
+        public bool isIOIndex(int index)
         {
             if (getPayloadInt(0) == index)
                 return true;
@@ -451,6 +533,13 @@ namespace cpsLIB
 }
 
 #region unused
+//public Int16 ChangeEndian(Int16 i)
+//{
+//    byte[] b = BitConverter.GetBytes(i);
+//    //return (Int16)(b[0] * 256 + b[1]);
+//    return (Int16)(b[1] + b[0]);
+//}
+
 //private Int16[] changeEndian(Int16[] data)
 //{
 //    Int16[] tmp_data = new Int16[data.Length];
